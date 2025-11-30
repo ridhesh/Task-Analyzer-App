@@ -1,6 +1,5 @@
 from rest_framework import serializers
 from .models import Task
-import json
 
 class TaskSerializer(serializers.ModelSerializer):
     priority_score = serializers.FloatField(read_only=True, required=False)

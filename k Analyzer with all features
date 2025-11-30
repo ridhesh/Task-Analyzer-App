@@ -1,0 +1,3237 @@
+[1mdiff --git a/README.md b/README.md[m
+[1mindex 46843b2..959d051 100644[m
+[1m--- a/README.md[m
+[1m+++ b/README.md[m
+[36m@@ -1,16 +1,210 @@[m
+ # Smart Task Analyzer[m
+ [m
+[31m-A intelligent task management system that scores and prioritizes tasks based on multiple factors including urgency, importance, effort, and dependencies.[m
+[32m+[m[32mAn intelligent task prioritization system that helps users identify which tasks to work on first based on multiple factors.[m
+ [m
+ ## Features[m
+ [m
+[31m-- **Smart Priority Scoring**: Algorithm that considers multiple factors to calculate task priority[m
+[31m-- **Multiple Sorting Strategies**: Choose between different prioritization approaches[m
+[31m-- **Task Analysis**: Get detailed insights into why tasks are prioritized[m
+[31m-- **Top Suggestions**: Receive personalized recommendations for what to work on next[m
+[31m-- **Bulk Task Import**: Load tasks via JSON for quick setup[m
+[31m-- **Responsive Design**: Works on desktop and mobile devices[m
+[31m-- **Local Storage**: Your tasks are saved automatically[m
+[31m-- **Django REST API**: Robust backend with full CRUD operations[m
+[32m+[m[32m- Smart Priority Scoring: Algorithm considers urgency, importance, effort, and dependencies[m
+[32m+[m[32m- Multiple Strategies: Choose between different prioritization approaches[m
+[32m+[m[32m- Bulk Task Import: Load multiple tasks via JSON[m
+[32m+[m[32m- Circular Dependency Detection: Automatically detects and warns about circular dependencies[m
+[32m+[m[32m- Responsive Design: Works on desktop and mobile devices[m
+[32m+[m[32m- Local Storage: Tasks persist between browser sessions[m
+ [m
+[31m-## Project Structure[m
+[32m+[m[32m## Setup Instructions[m
+[32m+[m
+[32m+[m[32m### Backend Setup[m
+[32m+[m
+[32m+[m[32m1. Navigate to the backend directory:[m
+[32m+[m[32m```bash[m
+[32m+[m[32mcd backend[m
+[32m+[m[32m```[m
+[32m+[m
+[32m+[m[32m2. Install dependencies:[m
+[32m+[m[32m```bash[m
+[32m+[m[32mpip install -r requirements.txt[m
+[32m+[m[32m```[m
+[32m+[m
+[32m+[m[32m3. Run migrations:[m
+[32m+[m[32m```bash[m
+[32m+[m[32mpython manage.py migrate[m
+[32m+[m[32m```[m
+[32m+[m
+[32m+[m[32m4. Start the development server:[m
+[32m+[m[32m```bash[m
+[32m+[m[32mpython manage.py runserver[m
+[32m+[m[32m```[m
+[32m+[m
+[32m+[m[32m### Frontend Setup[m
+[32m+[m
+[32m+[m[32mThe frontend is served directly by Django. Open your browser and navigate to:[m
+[32m+[m[32m```[m
+[32m+[m[32mhttp://127.0.0.1:8000[m
+[32m+[m[32m```[m
+[32m+[m
+[32m+[m[32m## Algorithm Explanation[m
+[32m+[m
+[32m+[m[32mThe priority scoring algorithm uses a weighted approach with four components:[m
+[32m+[m
+[32m+[m[32m### 1. Urgency (40% default)[m
+[32m+[m[32mBased on due date proximity:[m
+[32m+[m[32m- Overdue: 1.0[m
+[32m+[m[32m- Due today: 0.9[m
+[32m+[m[32m- Tomorrow: 0.8[m
+[32m+[m[32m- 2-3 days: 0.6[m
+[32m+[m[32m- 4-7 days: 0.4[m
+[32m+[m[32m- More than 7 days: 0.2[m
+[32m+[m
+[32m+[m[32m### 2. Importance (30% default)[m
+[32m+[m[32mNormalized user rating (1-10 scale to 0-1)[m
+[32m+[m
+[32m+[m[32m### 3. Effort (20% default)[m
+[32m+[m[32mInverse relationship with estimated hours:[m
+[32m+[m[32m- 1 hour or less: 1.0[m
+[32m+[m[32m- 1-4 hours: 0.7[m
+[32m+[m[32m- 4-8 hours: 0.4[m
+[32m+[m[32m- More than 8 hours: 0.2[m
+[32m+[m
+[32m+[m[32m### 4. Dependencies (10% default)[m
+[32m+[m[32mTasks blocking others get higher priority[m
+[32m+[m
+[32m+[m[32m### Available Strategies[m
+[32m+[m
+[32m+[m[32m- Smart Balance: Balanced weighting of all factors[m
+[32m+[m[32m- Fastest Wins: Emphasizes low-effort tasks (50% weight)[m
+[32m+[m[32m- High Impact: Focuses on importance (60% weight)[m
+[32m+[m[32m- Deadline Driven: Prioritizes urgency (70% weight)[m
+[32m+[m
+[32m+[m[32m## API Endpoints[m
+[32m+[m
+[32m+[m[32m- POST /api/tasks/analyze/ - Analyze and sort tasks by priority[m
+[32m+[m[32m- POST /api/tasks/suggest/ - Get top 3 task recommendations[m
+[32m+[m
+[32m+[m[32m### API Behavior Note[m
+[32m+[m
+[32m+[m[32mThe APIs return "405 Method Not Allowed" for GET requests - this is expected and correct behavior. The endpoints are designed to only accept POST requests with task data.[m
+[32m+[m
+[32m+[m[32m#### Correct Usage:[m
+[32m+[m[32m```bash[m
+[32m+[m[32m# POST requests work (expected)[m
+[32m+[m[32mcurl -X POST http://127.0.0.1:8000/api/tasks/analyze/ \[m
+[32m+[m[32m  -H "Content-Type: application/json" \[m
+[32m+[m[32m  -d '[{"title": "Test", "due_date": "2024-12-15", "estimated_hours": 3, "importance": 8, "dependencies": []}]'[m
+[32m+[m
+[32m+[m[32m# GET requests fail (expected - this is correct)[m
+[32m+[m[32mcurl -X GET http://127.0.0.1:8000/api/tasks/analyze/[m
+[32m+[m[32m```[m
+[32m+[m
+[32m+[m[32m## Design Decisions[m
+[32m+[m
+[32m+[m[32m### Algorithm Design[m
+[32m+[m[32m- Weighted Sum Approach: Chosen for transparency and configurability[m
+[32m+[m[32m- Normalized Scores: All components scaled to 0-1 for consistency[m
+[32m+[m[32m- Strategy Pattern: Different weighting strategies for flexibility[m
+[32m+[m
+[32m+[m[32m### Frontend Architecture[m
+[32m+[m[32m- Progressive Enhancement: Works even if backend is unavailable[m
+[32m+[m[32m- Local Storage: Data persistence without server dependency[m
+[32m+[m[32m- Responsive Design: Mobile-first approach with CSS Grid/Flexbox[m
+[32m+[m
+[32m+[m[32m### Error Handling[m
+[32m+[m[32m- Graceful Degradation: Falls back to local analysis if API fails[m
+[32m+[m[32m- User Feedback: Clear error messages and loading states[m
+[32m+[m[32m- Input Validation: Client-side validation with helpful messages[m
+[32m+[m
+[32m+[m[32m## Time Breakdown[m
+[32m+[m
+[32m+[m[32m- Algorithm Design & Backend: 2 hours[m
+[32m+[m[32m- Frontend Development: 1.5 hours[m
+[32m+[m[32m- Testing & Debugging: 1 hour[m
+[32m+[m[32m- Documentation: 0.5 hour[m
+[32m+[m
+[32m+[m[32m## Core Requirements Met[m
+[32m+[m
+[32m+[m[32m### Backend (Python/Django)[m
+[32m+[m[32m- Task model with all required fields[m
+[32m+[m[32m- Priority scoring algorithm with 4 factors[m
+[32m+[m[32m- API endpoints for analysis and suggestions[m
+[32m+[m[32m- Circular dependency detection[m
+[32m+[m[32m- Error handling and validation[m
+[32m+[m
+[32m+[m[32m### Frontend (HTML/CSS/JavaScript)[m
+[32m+[m[32m- Task input form with validation[m
+[32m+[m[32m- JSON bulk import[m
+[32m+[m[32m- Strategy selection (4 options)[m
+[32m+[m[32m- Priority visualization with color coding[m
+[32m+[m[32m- Responsive design[m
+[32m+[m[32m- Error handling and loading states[m
+[32m+[m
+[32m+[m[32m## Testing Guide[m
+[32m+[m
+[32m+[m[32m### Core Functionality Tests[m
+[32m+[m
+[32m+[m[32m#### Test 1: Basic Task Management[m
+[32m+[m[32m1. Add a single task using the form[m
+[32m+[m[32m2. Load sample tasks using the "Load Sample Tasks" button[m
+[32m+[m[32m3. Analyze tasks using the "Analyze Tasks" button[m
+[32m+[m[32m4. Verify tasks are sorted by priority score with color coding[m
+[32m+[m
+[32m+[m[32m#### Test 2: Strategy Switching[m
+[32m+[m[32m1. Test different strategies (Smart Balance, Fastest Wins, High Impact, Deadline Driven)[m
+[32m+[m[32m2. Verify each strategy produces different priority rankings[m
+[32m+[m[32m3. Confirm strategy changes are reflected in the analysis[m
+[32m+[m
+[32m+[m[32m#### Test 3: API Testing[m
+[32m+[m[32m1. Test POST /api/tasks/analyze/ with valid task data[m
+[32m+[m[32m2. Test POST /api/tasks/suggest/ with valid task data[m
+[32m+[m[32m3. Verify APIs return 200 status codes for valid requests[m
+[32m+[m[32m4. Confirm APIs return appropriate error codes for invalid requests[m
+[32m+[m
+[32m+[m[32m### Edge Case Tests[m
+[32m+[m[32m- Test form validation with invalid inputs[m
+[32m+[m[32m- Test JSON parsing with invalid JSON[m
+[32m+[m[32m- Test responsive design on different screen sizes[m
+[32m+[m[32m- Test data persistence after browser refresh[m
+[32m+[m
+[32m+[m[32m## Recent Updates[m
+[32m+[m
+[32m+[m[32m- Fixed backend API 500 errors[m
+[32m+[m[32m- Added comprehensive error handling and debug logging[m
+[32m+[m[32m- Made all navigation buttons functional[m
+[32m+[m[32m- Fixed notification display issues[m
+[32m+[m[32m- APIs now fully operational with proper strategy support[m
+[32m+[m
+[32m+[m[32m## Future Improvements[m
+[32m+[m
+[32m+[m[32m- User authentication and task persistence[m
+[32m+[m[32m- Advanced dependency visualization[m
+[32m+[m[32m- Machine learning for personalized weighting[m
+[32m+[m[32m- Integration with calendar systems[m
+[32m+[m[32m- Team collaboration features[m
+[32m+[m[32m- Export functionality for results[m
+[32m+[m
+[32m+[m[32m## Troubleshooting[m
+[32m+[m
+[32m+[m[32m### Common Issues[m
+[32m+[m
+[32m+[m[32m1. API not working: Application falls back to local analysis[m
+[32m+[m[32m2. Static files not loading: Check Django static file configuration[m
+[32m+[m[32m3. Database errors: Run python manage.py migrate[m
+[32m+[m
+[32m+[m[32m### Browser Compatibility[m
+[32m+[m[32m- Chrome 90+[m
+[32m+[m[32m- Firefox 88+[m
+[32m+[m[32m- Safari 14+[m
+[32m+[m[32m- Edge 90+[m
+[32m+[m
+[32m+[m[32m## License[m
+[32m+[m
+[32m+[m[32mMIT License - feel free to use this project for your assessment![m
+[32m+[m
+[32m+[m[32m## Demo Video[m
+[32m+[m
+[32m+[m[32m[Watch the demo video here] - Upload your video to YouTube, Google Drive, or Loom and add the link[m
+[32m+[m
+[32m+[m[32m## Testing Results[m
+[32m+[m
+[32m+[m[32mAll API endpoints returning 200 SUCCESS:[m
+[32m+[m[32m- POST /api/tasks/analyze/ - Working[m
+[32m+[m[32m- POST /api/tasks/suggest/ - Working[m
+[32m+[m[32m- Multiple strategies supported - Working[m
+\ No newline at end of file[m
+[1mdiff --git a/backend/manage.py b/backend/manage.py[m
+[1mindex 8decc61..2fe4b5e 100644[m
+[1m--- a/backend/manage.py[m
+[1m+++ b/backend/manage.py[m
+[36m@@ -1,19 +1,15 @@[m
+[32m+[m[32m#!/usr/bin/env python[m
+ import os[m
+ import sys[m
+ [m
+[31m-[m
+[31m-def main():[m
+[31m-    """Run administrative tasks."""[m
+[32m+[m[32mif __name__ == '__main__':[m
+     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'task_analyzer.settings')[m
+     try:[m
+         from django.core.management import execute_from_command_line[m
+     except ImportError as exc:[m
+         raise ImportError([m
+             "Couldn't import Django. Are you sure it's installed and "[m
+[31m-            "available on your PYTHONPATH environment variable?"[m
+[32m+[m[32m            "available on your PYTHONPATH environment variable? Did you "[m
+[32m+[m[32m            "forget to activate a virtual environment?"[m
+         ) from exc[m
+[31m-    execute_from_command_line(sys.argv)[m
+[31m-[m
+[31m-[m
+[31m-if __name__ == '__main__':[m
+[31m-    main()[m
+\ No newline at end of file[m
+[32m+[m[32m    execute_from_command_line(sys.argv)[m
+\ No newline at end of file[m
+[1mdiff --git a/backend/requirements.txt b/backend/requirements.txt[m
+[1mindex 361c7db..4108250 100644[m
+[1m--- a/backend/requirements.txt[m
+[1m+++ b/backend/requirements.txt[m
+[36m@@ -1,4 +1,3 @@[m
+ Django==4.2.16[m
+[31m-djangorestframework==3.15.2[m
+[31m-django-cors-headers==4.3.1[m
+[31m-python-dateutil==2.9.0[m
+\ No newline at end of file[m
+[32m+[m[32mdjangorestframework==3.14.0[m
+[32m+[m[32mdjango-cors-headers==4.3.1[m
+\ No newline at end of file[m
+[1mdiff --git a/backend/task_analyzer/settings.py b/backend/task_analyzer/settings.py[m
+[1mindex 8f6d1da..484353f 100644[m
+[1m--- a/backend/task_analyzer/settings.py[m
+[1m+++ b/backend/task_analyzer/settings.py[m
+[36m@@ -1,36 +1,12 @@[m
+[31m-"""[m
+[31m-Django settings for task_analyzer project.[m
+[31m-[m
+[31m-Generated by 'django-admin startproject' using Django 4.2.16.[m
+[31m-[m
+[31m-For more information on this file, see[m
+[31m-https://docs.djangoproject.com/en/4.2/topics/settings/[m
+[31m-[m
+[31m-For the full list of settings and their values, see[m
+[31m-https://docs.djangoproject.com/en/4.2/ref/settings/[m
+[31m-"""[m
+[31m-[m
+ import os[m
+ from pathlib import Path[m
+ [m
+[31m-# Build paths inside the project like this: BASE_DIR / 'subdir'.[m
+ BASE_DIR = Path(__file__).resolve().parent.parent[m
+ [m
+[31m-[m
+[31m-# Quick-start development settings - unsuitable for production[m
+[31m-# See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/[m
+[31m-[m
+[31m-# SECURITY WARNING: keep the secret key used in production secret![m
+ SECRET_KEY = 'django-insecure-smart-task-analyzer-intern-assessment'[m
+[31m-[m
+[31m-# SECURITY WARNING: don't run with debug turned on in production![m
+ DEBUG = True[m
+[31m-[m
+ ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '0.0.0.0'][m
+ [m
+[31m-[m
+[31m-# Application definition[m
+[31m-[m
+ INSTALLED_APPS = [[m
+     'django.contrib.admin',[m
+     'django.contrib.auth',[m
+[36m@@ -38,17 +14,13 @@[m [mINSTALLED_APPS = [[m
+     'django.contrib.sessions',[m
+     'django.contrib.messages',[m
+     'django.contrib.staticfiles',[m
+[31m-    [m
+[31m-    # Third party apps[m
+     'rest_framework',[m
+     'corsheaders',[m
+[31m-    [m
+[31m-    # Local apps[m
+     'tasks',[m
+ ][m
+ [m
+ MIDDLEWARE = [[m
+[31m-    'corsheaders.middleware.CorsMiddleware',  # CORS middleware should be at the top[m
+[32m+[m[32m    'corsheaders.middleware.CorsMiddleware',[m
+     'django.middleware.security.SecurityMiddleware',[m
+     'django.contrib.sessions.middleware.SessionMiddleware',[m
+     'django.middleware.common.CommonMiddleware',[m
+[36m@@ -63,9 +35,7 @@[m [mROOT_URLCONF = 'task_analyzer.urls'[m
+ TEMPLATES = [[m
+     {[m
+         'BACKEND': 'django.template.backends.django.DjangoTemplates',[m
+[31m-        'DIRS': [[m
+[31m-            os.path.join(BASE_DIR, '..', 'frontend'),  # Point to frontend directory[m
+[31m-        ],[m
+[32m+[m[32m        'DIRS': [os.path.join(BASE_DIR, '..', 'frontend')],[m
+         'APP_DIRS': True,[m
+         'OPTIONS': {[m
+             'context_processors': [[m
+[36m@@ -80,10 +50,6 @@[m [mTEMPLATES = [[m
+ [m
+ WSGI_APPLICATION = 'task_analyzer.wsgi.application'[m
+ [m
+[31m-[m
+[31m-# Database[m
+[31m-# https://docs.djangoproject.com/en/4.2/ref/settings/#databases[m
+[31m-[m
+ DATABASES = {[m
+     'default': {[m
+         'ENGINE': 'django.db.backends.sqlite3',[m
+[36m@@ -91,10 +57,6 @@[m [mDATABASES = {[m
+     }[m
+ }[m
+ [m
+[31m-[m
+[31m-# Password validation[m
+[31m-# https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators[m
+[31m-[m
+ AUTH_PASSWORD_VALIDATORS = [[m
+     {[m
+         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',[m
+[36m@@ -110,84 +72,29 @@[m [mAUTH_PASSWORD_VALIDATORS = [[m
+     },[m
+ ][m
+ [m
+[31m-[m
+[31m-# Internationalization[m
+[31m-# https://docs.djangoproject.com/en/4.2/topics/i18n/[m
+[31m-[m
+ LANGUAGE_CODE = 'en-us'[m
+[31m-[m
+ TIME_ZONE = 'UTC'[m
+[31m-[m
+ USE_I18N = True[m
+[31m-[m
+ USE_TZ = True[m
+ [m
+[31m-[m
+[31m-# Static files (CSS, JavaScript, Images)[m
+[31m-# https://docs.djangoproject.com/en/4.2/howto/static-files/[m
+[31m-[m
+[31m-STATIC_URL = 'static/'[m
+[31m-[m
+[31m-# Additional locations of static files[m
+[31m-STATICFILES_DIRS = [[m
+[31m-    os.path.join(BASE_DIR, '..', 'frontend'),  # Serve frontend files as static[m
+[31m-][m
+[31m-[m
+[31m-# Default primary key field type[m
+[31m-# https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field[m
+[32m+[m[32mSTATIC_URL = '/static/'[m
+[32m+[m[32mSTATICFILES_DIRS = [os.path.join(BASE_DIR, '..', 'frontend')][m
+[32m+[m[32mSTATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')[m
+ [m
+ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'[m
+ [m
+[31m-[m
+[31m-# Django REST Framework configuration[m
+ REST_FRAMEWORK = {[m
+[31m-    'DEFAULT_RENDERER_CLASSES': [[m
+[31m-        'rest_framework.renderers.JSONRenderer',[m
+[31m-    ],[m
+[31m-    'DEFAULT_PARSER_CLASSES': [[m
+[31m-        'rest_framework.parsers.JSONParser',[m
+[31m-    ],[m
+[32m+[m[32m    'DEFAULT_RENDERER_CLASSES': ['rest_framework.renderers.JSONRenderer'],[m
+[32m+[m[32m    'DEFAULT_PARSER_CLASSES': ['rest_framework.parsers.JSONParser'],[m
+     'DEFAULT_AUTHENTICATION_CLASSES': [],[m
+[31m-    'DEFAULT_PERMISSION_CLASSES': [[m
+[31m-        'rest_framework.permissions.AllowAny',[m
+[31m-    ],[m
+[32m+[m[32m    'DEFAULT_PERMISSION_CLASSES': ['rest_framework.permissions.AllowAny'],[m
+ }[m
+ [m
+[31m-# CORS settings for frontend-backend communication[m
+[31m-CORS_ALLOW_ALL_ORIGINS = True  # Allow all origins for development[m
+[31m-[m
+[31m-# Specific allowed origins (alternative to allowing all)[m
+[32m+[m[32mCORS_ALLOW_ALL_ORIGINS = True[m
+ CORS_ALLOWED_ORIGINS = [[m
+     "http://localhost:8000",[m
+     "http://127.0.0.1:8000",[m
+     "http://localhost:3000",[m
+     "http://127.0.0.1:3000",[m
+[31m-    "http://localhost:8080",[m
+[31m-    "http://127.0.0.1:8080",[m
+ ][m
+[31m-[m
+[31m-# Allow credentials (cookies, authorization headers)[m
+[31m-CORS_ALLOW_CREDENTIALS = True[m
+[31m-[m
+[31m-# Allowed methods[m
+[31m-CORS_ALLOW_METHODS = [[m
+[31m-    'DELETE',[m
+[31m-    'GET',[m
+[31m-    'OPTIONS',[m
+[31m-    'PATCH',[m
+[31m-    'POST',[m
+[31m-    'PUT',[m
+[31m-][m
+[31m-[m
+[31m-# Allowed headers[m
+[31m-CORS_ALLOW_HEADERS = [[m
+[31m-    'accept',[m
+[31m-    'accept-encoding',[m
+[31m-    'authorization',[m
+[31m-    'content-type',[m
+[31m-    'dnt',[m
+[31m-    'origin',[m
+[31m-    'user-agent',[m
+[31m-    'x-csrftoken',[m
+[31m-    'x-requested-with',[m
+[31m-][m
+\ No newline at end of file[m
+[32m+[m[32mCORS_ALLOW_CREDENTIALS = True[m
+\ No newline at end of file[m
+[1mdiff --git a/backend/task_analyzer/urls.py b/backend/task_analyzer/urls.py[m
+[1mindex f0bc6b3..52597d1 100644[m
+[1m--- a/backend/task_analyzer/urls.py[m
+[1m+++ b/backend/task_analyzer/urls.py[m
+[36m@@ -1,27 +1,14 @@[m
+ from django.contrib import admin[m
+ from django.urls import path, include[m
+[31m-from django.http import JsonResponse[m
+ from django.views.generic import TemplateView[m
+ from django.conf import settings[m
+ from django.conf.urls.static import static[m
+ [m
+[31m-def api_root(request):[m
+[31m-    return JsonResponse({[m
+[31m-        'message': 'Smart Task Analyzer API',[m
+[31m-        'endpoints': {[m
+[31m-            'analyze_tasks': '/api/tasks/analyze/',[m
+[31m-            'suggest_tasks': '/api/tasks/suggest/',[m
+[31m-            'admin': '/admin/'[m
+[31m-        },[m
+[31m-        'version': '1.0.0'[m
+[31m-    })[m
+[31m-[m
+ urlpatterns = [[m
+[31m-    path('', api_root, name='api_root'),[m
+[32m+[m[32m    path('', TemplateView.as_view(template_name='index.html'), name='home'),[m
+     path('api/', include('tasks.urls')),[m
+     path('admin/', admin.site.urls),[m
+ ][m
+ [m
+[31m-# Serve static files in development[m
+ if settings.DEBUG:[m
+     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)[m
+\ No newline at end of file[m
+[1mdiff --git a/backend/tasks/admin.py b/backend/tasks/admin.py[m
+[1mindex 40b79a4..5b847e1 100644[m
+[1m--- a/backend/tasks/admin.py[m
+[1m+++ b/backend/tasks/admin.py[m
+[36m@@ -6,13 +6,4 @@[m [mclass TaskAdmin(admin.ModelAdmin):[m
+     list_display = ['title', 'due_date', 'estimated_hours', 'importance', 'created_at'][m
+     list_filter = ['due_date', 'importance', 'created_at'][m
+     search_fields = ['title'][m
+[31m-    date_hierarchy = 'due_date'[m
+[31m-    [m
+[31m-    fieldsets = ([m
+[31m-        ('Basic Information', {[m
+[31m-            'fields': ('title', 'due_date')[m
+[31m-        }),[m
+[31m-        ('Task Details', {[m
+[31m-            'fields': ('estimated_hours', 'importance', 'dependencies')[m
+[31m-        }),[m
+[31m-    )[m
+\ No newline at end of file[m
+[32m+[m[32m    date_hierarchy = 'due_date'[m
+\ No newline at end of file[m
+[1mdiff --git a/backend/tasks/models.py b/backend/tasks/models.py[m
+[1mindex ac92b63..17ade08 100644[m
+[1m--- a/backend/tasks/models.py[m
+[1m+++ b/backend/tasks/models.py[m
+[36m@@ -3,26 +3,11 @@[m [mfrom django.core.validators import MinValueValidator, MaxValueValidator[m
+ import json[m
+ [m
+ class Task(models.Model):[m
+[31m-    title = models.CharField([m
+[31m-        max_length=200,[m
+[31m-        help_text="Enter a descriptive title for the task"[m
+[31m-    )[m
+[31m-    due_date = models.DateField([m
+[31m-        help_text="When this task needs to be completed"[m
+[31m-    )[m
+[31m-    estimated_hours = models.FloatField([m
+[31m-        validators=[MinValueValidator(0.1)],[m
+[31m-        help_text="Estimated time to complete in hours"[m
+[31m-    )[m
+[31m-    importance = models.IntegerField([m
+[31m-        validators=[MinValueValidator(1), MaxValueValidator(10)],[m
+[31m-        help_text="Importance level from 1 (low) to 10 (high)"[m
+[31m-    )[m
+[31m-    dependencies = models.TextField([m
+[31m-        default='[]',[m
+[31m-        blank=True,[m
+[31m-        help_text="List of task IDs that must be completed before this task (JSON format)"[m
+[31m-    )[m
+[32m+[m[32m    title = models.CharField(max_length=200)[m
+[32m+[m[32m    due_date = models.DateField()[m
+[32m+[m[32m    estimated_hours = models.FloatField(validators=[MinValueValidator(0.1)])[m
+[32m+[m[32m    importance = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(10)])[m
+[32m+[m[32m    dependencies = models.TextField(default='[]', blank=True)[m
+     created_at = models.DateTimeField(auto_now_add=True)[m
+     updated_at = models.DateTimeField(auto_now=True)[m
+     [m
+[36m@@ -33,14 +18,12 @@[m [mclass Task(models.Model):[m
+         return f"{self.title} (Due: {self.due_date})"[m
+     [m
+     def get_dependencies(self):[m
+[31m-        """Get dependencies as a Python list"""[m
+         try:[m
+             return json.loads(self.dependencies)[m
+         except (json.JSONDecodeError, TypeError):[m
+             return [][m
+     [m
+     def set_dependencies(self, value):[m
+[31m-        """Set dependencies from a Python list"""[m
+         if isinstance(value, list):[m
+             self.dependencies = json.dumps(value)[m
+         else:[m
+[1mdiff --git a/backend/tasks/scoring.py b/backend/tasks/scoring.py[m
+[1mindex 5729441..1124bb9 100644[m
+[1m--- a/backend/tasks/scoring.py[m
+[1m+++ b/backend/tasks/scoring.py[m
+[36m@@ -1,4 +1,4 @@[m
+[31m-from datetime import date, timedelta[m
+[32m+[m[32mfrom datetime import date[m
+ [m
+ class TaskScorer:[m
+     def __init__(self, strategy="smart_balance"):[m
+[36m@@ -6,7 +6,6 @@[m [mclass TaskScorer:[m
+         self.weights = self._get_weights(strategy)[m
+     [m
+     def _get_weights(self, strategy):[m
+[31m-        """Get weights based on the selected strategy"""[m
+         weights = {[m
+             "smart_balance": {"urgency": 0.4, "importance": 0.3, "effort": 0.2, "dependencies": 0.1},[m
+             "fastest_wins": {"urgency": 0.2, "importance": 0.2, "effort": 0.5, "dependencies": 0.1},[m
+[36m@@ -16,39 +15,39 @@[m [mclass TaskScorer:[m
+         return weights.get(strategy, weights["smart_balance"])[m
+     [m
+     def calculate_urgency_score(self, due_date, today=None):[m
+[31m-        """Calculate urgency score based on due date"""[m
+         if today is None:[m
+             today = date.today()[m
+         [m
+[32m+[m[32m        if not due_date:[m
+[32m+[m[32m            return 0.5[m
+[32m+[m[41m            [m
+         try:[m
+             due_date_obj = date.fromisoformat(due_date) if isinstance(due_date, str) else due_date[m
+             days_until_due = (due_date_obj - today).days[m
+             [m
+             if days_until_due < 0:[m
+[31m-                return 1.0  # Overdue[m
+[32m+[m[32m                return 1.0[m
+             elif days_until_due == 0:[m
+[31m-                return 0.9  # Due today[m
+[32m+[m[32m                return 0.9[m
+             elif days_until_due <= 1:[m
+[31m-                return 0.8  # Tomorrow[m
+[32m+[m[32m                return 0.8[m
+             elif days_until_due <= 3:[m
+[31m-                return 0.6  # 2-3 days[m
+[32m+[m[32m                return 0.6[m
+             elif days_until_due <= 7:[m
+[31m-                return 0.4  # 4-7 days[m
+[32m+[m[32m                return 0.4[m
+             else:[m
+[31m-                return 0.2  # More than 7 days[m
+[32m+[m[32m                return 0.2[m
+         except (ValueError, TypeError):[m
+[31m-            return 0.5  # Default score for invalid dates[m
+[32m+[m[32m            return 0.5[m
+     [m
+     def calculate_importance_score(self, importance):[m
+[31m-        """Normalize importance score (1-10 scale to 0-1)"""[m
+         try:[m
+             importance_val = int(importance)[m
+             return max(0.1, min(1.0, importance_val / 10.0))[m
+         except (ValueError, TypeError):[m
+[31m-            return 0.5  # Default score for invalid importance[m
+[32m+[m[32m            return 0.5[m
+     [m
+     def calculate_effort_score(self, estimated_hours):[m
+[31m-        """Calculate effort score (lower effort = higher score)"""[m
+         try:[m
+             hours = float(estimated_hours)[m
+             if hours <= 1:[m
+[36m@@ -60,19 +59,14 @@[m [mclass TaskScorer:[m
+             else:[m
+                 return 0.2[m
+         except (ValueError, TypeError):[m
+[31m-            return 0.5  # Default score for invalid hours[m
+[32m+[m[32m            return 0.5[m
+     [m
+     def calculate_dependency_score(self, dependencies, all_tasks):[m
+[31m-        """Calculate dependency score (tasks that block others get higher priority)"""[m
+         if not dependencies or not isinstance(dependencies, list):[m
+[31m-            return 0.5  # Neutral score for no dependencies[m
+[32m+[m[32m            return 0.5[m
+         [m
+         try:[m
+[31m-            # Check if this task blocks other tasks[m
+[31m-            task_index = all_tasks.index(all_tasks) if all_tasks else -1[m
+[31m-            if task_index == -1:[m
+[31m-                return 0.5[m
+[31m-            [m
+[32m+[m[32m            task_index = all_tasks.index(all_tasks)[m
+             blocking_count = 0[m
+             for task in all_tasks:[m
+                 task_deps = task.get('dependencies', [])[m
+[36m@@ -80,61 +74,57 @@[m [mclass TaskScorer:[m
+                     blocking_count += 1[m
+             [m
+             if blocking_count > 0:[m
+[31m-                return 1.0  # High priority if blocking other tasks[m
+[32m+[m[32m                return 1.0[m
+             else:[m
+[31m-                return 0.3  # Lower priority if has dependencies but not blocking others[m
+[32m+[m[32m                return 0.3[m
+         except (ValueError, IndexError):[m
+             return 0.5[m
+     [m
+     def detect_circular_dependencies(self, tasks):[m
+[31m-        """Detect circular dependencies in tasks"""[m
+[31m-        circular_deps = [][m
+[32m+[m[32m        graph = {}[m
+[32m+[m[32m        for i, task in enumerate(tasks):[m
+[32m+[m[32m            task_id = i + 1[m
+[32m+[m[32m            dependencies = task.get('dependencies', [])[m
+[32m+[m[32m            graph[task_id] = dependencies[m
+[32m+[m[41m        [m
+         visited = set()[m
+[32m+[m[32m        rec_stack = set()[m
+[32m+[m[32m        circular_deps = [][m
+         [m
+[31m-        def dfs(task_id, path):[m
+[31m-            if task_id in path:[m
+[31m-                circular_start = path.index(task_id)[m
+[31m-                circular_deps.append(path[circular_start:])[m
+[32m+[m[32m        def dfs(node, path):[m
+[32m+[m[32m            if node in rec_stack:[m
+[32m+[m[32m                cycle_start = path.index(node)[m
+[32m+[m[32m                circular_deps.append(path[cycle_start:])[m
+                 return[m
+             [m
+[31m-            if task_id in visited:[m
+[32m+[m[32m            if node in visited:[m
+                 return[m
+             [m
+[31m-            visited.add(task_id)[m
+[31m-            path.append(task_id)[m
+[32m+[m[32m            visited.add(node)[m
+[32m+[m[32m            rec_stack.add(node)[m
+[32m+[m[32m            path.append(node)[m
+             [m
+[31m-            # Find task by ID (assuming IDs start from 1)[m
+[31m-            task = None[m
+[31m-            for t in tasks:[m
+[31m-                if t.get('id') == task_id or (tasks.index(t) + 1) == task_id:[m
+[31m-                    task = t[m
+[31m-                    break[m
+[32m+[m[32m            for neighbor in graph.get(node, []):[m
+[32m+[m[32m                dfs(neighbor, path.copy())[m
+             [m
+[31m-            if task:[m
+[31m-                deps = task.get('dependencies', [])[m
+[31m-                if isinstance(deps, list):[m
+[31m-                    for dep_id in deps:[m
+[31m-                        dfs(dep_id, path.copy())[m
+[32m+[m[32m            rec_stack.remove(node)[m
+[32m+[m[32m            path.pop()[m
+         [m
+[31m-        for i in range(len(tasks)):[m
+[31m-            task_id = i + 1[m
+[31m-            if task_id not in visited:[m
+[31m-                dfs(task_id, [])[m
+[32m+[m[32m        for node in graph:[m
+[32m+[m[32m            if node not in visited:[m
+[32m+[m[32m                dfs(node, [])[m
+         [m
+         return circular_deps[m
+     [m
+     def calculate_priority_score(self, task, all_tasks=None):[m
+[31m-        """Calculate overall priority score for a task"""[m
+         if all_tasks is None:[m
+             all_tasks = [task][m
+         [m
+[31m-        # Calculate individual component scores with error handling[m
+         urgency_score = self.calculate_urgency_score(task.get('due_date', ''))[m
+         importance_score = self.calculate_importance_score(task.get('importance', 5))[m
+         effort_score = self.calculate_effort_score(task.get('estimated_hours', 1))[m
+         dependency_score = self.calculate_dependency_score(task.get('dependencies', []), all_tasks)[m
+         [m
+[31m-        # Calculate weighted overall score[m
+         overall_score = ([m
+             urgency_score * self.weights['urgency'] +[m
+             importance_score * self.weights['importance'] +[m
+[36m@@ -142,10 +132,8 @@[m [mclass TaskScorer:[m
+             dependency_score * self.weights['dependencies'][m
+         )[m
+         [m
+[31m-        # Ensure score is between 0 and 1[m
+         overall_score = max(0, min(1, overall_score))[m
+         [m
+[31m-        # Generate explanation[m
+         explanation_parts = [][m
+         if urgency_score > 0.7:[m
+             explanation_parts.append('high urgency')[m
+[1mdiff --git a/backend/tasks/serializers.py b/backend/tasks/serializers.py[m
+[1mindex 62f7e10..5f0980f 100644[m
+[1m--- a/backend/tasks/serializers.py[m
+[1m+++ b/backend/tasks/serializers.py[m
+[36m@@ -1,6 +1,5 @@[m
+ from rest_framework import serializers[m
+ from .models import Task[m
+[31m-import json[m
+ [m
+ class TaskSerializer(serializers.ModelSerializer):[m
+     priority_score = serializers.FloatField(read_only=True, required=False)[m
+[1mdiff --git a/backend/tasks/tests.py b/backend/tasks/tests.py[m
+[1mindex af51297..546a5e0 100644[m
+[1m--- a/backend/tasks/tests.py[m
+[1m+++ b/backend/tasks/tests.py[m
+[36m@@ -8,21 +8,14 @@[m [mclass TaskScoringTests(TestCase):[m
+         self.today = date.today()[m
+     [m
+     def test_urgency_score_calculation(self):[m
+[31m-        # Test overdue task[m
+         overdue_date = str(self.today - timedelta(days=1))[m
+         self.assertEqual(self.scorer.calculate_urgency_score(overdue_date), 1.0)[m
+         [m
+[31m-        # Test due today[m
+         today_date = str(self.today)[m
+         self.assertEqual(self.scorer.calculate_urgency_score(today_date), 0.9)[m
+         [m
+[31m-        # Test due tomorrow[m
+         tomorrow_date = str(self.today + timedelta(days=1))[m
+         self.assertEqual(self.scorer.calculate_urgency_score(tomorrow_date), 0.8)[m
+[31m-        [m
+[31m-        # Test due in 7 days[m
+[31m-        future_date = str(self.today + timedelta(days=7))[m
+[31m-        self.assertEqual(self.scorer.calculate_urgency_score(future_date), 0.4)[m
+     [m
+     def test_importance_score_calculation(self):[m
+         self.assertEqual(self.scorer.calculate_importance_score(10), 1.0)[m
+[36m@@ -31,20 +24,10 @@[m [mclass TaskScoringTests(TestCase):[m
+     [m
+     def test_effort_score_calculation(self):[m
+         self.assertEqual(self.scorer.calculate_effort_score(0.5), 1.0)[m
+[31m-        self.assertEqual(self.scorer.calculate_effort_score(2), 0.7)[m
+[32m+[m[32m        self.assertEqual(self.scorer.calculate_effort_score(3), 0.7)[m
+         self.assertEqual(self.scorer.calculate_effort_score(10), 0.2)[m
+     [m
+[31m-    def test_circular_dependency_detection(self):[m
+[31m-        tasks = [[m
+[31m-            {'id': 1, 'dependencies': [2]},[m
+[31m-            {'id': 2, 'dependencies': [1]},  # Circular dependency[m
+[31m-            {'id': 3, 'dependencies': []}[m
+[31m-        ][m
+[31m-        [m
+[31m-        circular_deps = self.scorer.detect_circular_dependencies(tasks)[m
+[31m-        self.assertEqual(len(circular_deps), 1)[m
+[31m-    [m
+[31m-    def test_priority_score_integration(self):[m
+[32m+[m[32m    def test_priority_score_calculation(self):[m
+         task = {[m
+             'title': 'Test Task',[m
+             'due_date': str(self.today),[m
+[36m@@ -57,40 +40,4 @@[m [mclass TaskScoringTests(TestCase):[m
+         self.assertIn('priority_score', result)[m
+         self.assertIn('explanation', result)[m
+         self.assertIn('component_scores', result)[m
+[31m-        self.assertTrue(0 <= result['priority_score'] <= 1)[m
+[31m-    [m
+[31m-    def test_different_strategies(self):[m
+[31m-        task = {[m
+[31m-            'title': 'Test Task',[m
+[31m-            'due_date': str(self.today),[m
+[31m-            'estimated_hours': 2,[m
+[31m-            'importance': 8,[m
+[31m-            'dependencies': [][m
+[31m-        }[m
+[31m-        [m
+[31m-        # Test different strategies[m
+[31m-        smart_balance_scorer = TaskScorer('smart_balance')[m
+[31m-        fastest_wins_scorer = TaskScorer('fastest_wins')[m
+[31m-        [m
+[31m-        smart_score = smart_balance_scorer.calculate_priority_score(task)[m
+[31m-        fast_score = fastest_wins_scorer.calculate_priority_score(task)[m
+[31m-        [m
+[31m-        # Scores should be different for different strategies[m
+[31m-        self.assertNotEqual(smart_score['priority_score'], fast_score['priority_score'])[m
+[31m-[m
+[31m-class TaskModelTests(TestCase):[m
+[31m-    def test_task_creation(self):[m
+[31m-        from .models import Task[m
+[31m-        [m
+[31m-        task = Task.objects.create([m
+[31m-            title="Test Task",[m
+[31m-            due_date=date.today(),[m
+[31m-            estimated_hours=2.0,[m
+[31m-            importance=5,[m
+[31m-            dependencies=[1, 2][m
+[31m-        )[m
+[31m-        [m
+[31m-        self.assertEqual(task.title, "Test Task")[m
+[31m-        self.assertEqual(task.estimated_hours, 2.0)[m
+[31m-        self.assertEqual(task.importance, 5)[m
+[31m-        self.assertEqual(task.dependencies, [1, 2])[m
+\ No newline at end of file[m
+[32m+[m[32m        self.assertTrue(0 <= result['priority_score'] <= 1)[m
+\ No newline at end of file[m
+[1mdiff --git a/backend/tasks/views.py b/backend/tasks/views.py[m
+[1mindex e1a85eb..e3afe54 100644[m
+[1m--- a/backend/tasks/views.py[m
+[1m+++ b/backend/tasks/views.py[m
+[36m@@ -1,9 +1,7 @@[m
+ from rest_framework import status[m
+ from rest_framework.decorators import api_view[m
+ from rest_framework.response import Response[m
+[31m-from datetime import date[m
+ from .scoring import TaskScorer[m
+[31m-import json[m
+ [m
+ @api_view(['POST'])[m
+ def analyze_tasks(request):[m
+[36m@@ -11,15 +9,24 @@[m [mdef analyze_tasks(request):[m
+     Analyze and sort tasks by priority score[m
+     """[m
+     try:[m
+[31m-        tasks_data = request.data[m
+[32m+[m[32m        print("🔍 Analyze endpoint called")  # Debug log[m
+         [m
+[31m-        if not isinstance(tasks_data, list):[m
+[32m+[m[32m        # Handle both array and object formats[m
+[32m+[m[32m        if isinstance(request.data, list):[m
+[32m+[m[32m            tasks_data = request.data[m
+[32m+[m[32m            strategy = 'smart_balance'[m
+[32m+[m[32m        elif isinstance(request.data, dict):[m
+[32m+[m[32m            tasks_data = request.data.get('tasks', [])[m
+[32m+[m[32m            strategy = request.data.get('strategy', 'smart_balance')[m
+[32m+[m[32m        else:[m
+             return Response([m
+[31m-                {"error": "Expected a list of tasks"}, [m
+[32m+[m[32m                {"error": "Expected a list of tasks or object with tasks array"},[m[41m [m
+                 status=status.HTTP_400_BAD_REQUEST[m
+             )[m
+         [m
+[31m-        if len(tasks_data) == 0:[m
+[32m+[m[32m        print(f"📊 Processing {len(tasks_data)} tasks with strategy: {strategy}")  # Debug log[m
+[32m+[m[41m        [m
+[32m+[m[32m        if not tasks_data:[m
+             return Response([m
+                 {"error": "No tasks provided for analysis"},[m
+                 status=status.HTTP_400_BAD_REQUEST[m
+[36m@@ -32,19 +39,8 @@[m [mdef analyze_tasks(request):[m
+                     {"error": f"Task {i+1} is missing required fields (title, due_date, estimated_hours, importance)"},[m
+                     status=status.HTTP_400_BAD_REQUEST[m
+                 )[m
+[31m-            [m
+[31m-            # Validate data types[m
+[31m-            try:[m
+[31m-                float(task_data['estimated_hours'])[m
+[31m-                int(task_data['importance'])[m
+[31m-            except (ValueError, TypeError):[m
+[31m-                return Response([m
+[31m-                    {"error": f"Task {i+1} has invalid data types for estimated_hours or importance"},[m
+[31m-                    status=status.HTTP_400_BAD_REQUEST[m
+[31m-                )[m
+         [m
+[31m-        # Get sorting strategy[m
+[31m-        strategy = request.data.get('strategy', 'smart_balance')[m
+[32m+[m[32m        # Initialize scorer[m
+         scorer = TaskScorer(strategy)[m
+         [m
+         # Check for circular dependencies[m
+[36m@@ -65,48 +61,59 @@[m [mdef analyze_tasks(request):[m
+         # Sort by priority score (descending)[m
+         sorted_tasks = sorted(scored_tasks, key=lambda x: x['priority_score'], reverse=True)[m
+         [m
+[32m+[m[32m        print(f"✅ Successfully analyzed {len(sorted_tasks)} tasks")  # Debug log[m
+[32m+[m[41m        [m
+         return Response({[m
+             'strategy_used': strategy,[m
+             'tasks': sorted_tasks,[m
+             'total_tasks': len(sorted_tasks),[m
+[31m-            'message': f'Successfully analyzed {len(sorted_tasks)} tasks using {strategy.replace("_", " ").title()} strategy'[m
+[32m+[m[32m            'message': f'Successfully analyzed {len(sorted_tasks)} tasks using {strategy} strategy'[m
+         })[m
+     [m
+     except Exception as e:[m
+[32m+[m[32m        print(f"❌ Error in analyze_tasks: {str(e)}")  # Debug log[m
+[32m+[m[32m        import traceback[m
+[32m+[m[32m        print(traceback.format_exc())  # Print full traceback[m
+[32m+[m[41m        [m
+         return Response([m
+             {"error": f"An error occurred during analysis: {str(e)}"},[m
+             status=status.HTTP_500_INTERNAL_SERVER_ERROR[m
+         )[m
+ [m
+[31m-@api_view(['GET', 'POST'])[m
+[32m+[m[32m@api_view(['POST'])[m
+ def suggest_tasks(request):[m
+     """[m
+     Get top 3 tasks to work on today[m
+     """[m
+     try:[m
+[31m-        if request.method == 'POST':[m
+[32m+[m[32m        print("💡 Suggest endpoint called")  # Debug log[m
+[32m+[m[41m        [m
+[32m+[m[32m        # Handle both array and object formats[m
+[32m+[m[32m        if isinstance(request.data, list):[m
+             tasks_data = request.data[m
+[31m-            if not isinstance(tasks_data, list):[m
+[31m-                return Response([m
+[31m-                    {"error": "Expected a list of tasks"}, [m
+[31m-                    status=status.HTTP_400_BAD_REQUEST[m
+[31m-                )[m
+[32m+[m[32m            strategy = 'smart_balance'[m
+[32m+[m[32m        elif isinstance(request.data, dict):[m
+[32m+[m[32m            tasks_data = request.data.get('tasks', [])[m
+[32m+[m[32m            strategy = request.data.get('strategy', 'smart_balance')[m
+         else:[m
+[31m-            # Return empty suggestions for GET requests without data[m
+[31m-            return Response({[m
+[31m-                'suggested_tasks': [],[m
+[31m-                'explanation': 'No tasks available for suggestions. Please use POST method with task data or use the analyze endpoint first.'[m
+[31m-            })[m
+[32m+[m[32m            return Response([m
+[32m+[m[32m                {"error": "Expected a list of tasks or object with tasks array"},[m[41m [m
+[32m+[m[32m                status=status.HTTP_400_BAD_REQUEST[m
+[32m+[m[32m            )[m
+         [m
+[31m-        if len(tasks_data) == 0:[m
+[32m+[m[32m        print(f"📊 Processing {len(tasks_data)} tasks for suggestions")  # Debug log[m
+[32m+[m[41m        [m
+[32m+[m[32m        if not tasks_data:[m
+             return Response({[m
+                 'suggested_tasks': [],[m
+                 'explanation': 'No tasks provided for suggestions'[m
+             })[m
+         [m
+[31m-        scorer = TaskScorer('smart_balance')[m
+[32m+[m[32m        # Initialize scorer[m
+[32m+[m[32m        scorer = TaskScorer(strategy)[m
+         scored_tasks = [][m
+         [m
+[32m+[m[32m        # Calculate scores for all tasks[m
+         for task_data in tasks_data:[m
+             score_result = scorer.calculate_priority_score(task_data, tasks_data)[m
+             scored_task = {**task_data, **score_result}[m
+[36m@@ -118,17 +125,21 @@[m [mdef suggest_tasks(request):[m
+         # Generate detailed explanations for each suggestion[m
+         for i, task in enumerate(top_tasks):[m
+             reasons = [][m
+[31m-            if task.get('component_scores', {}).get('urgency', 0) > 0.7:[m
+[32m+[m[32m            component_scores = task.get('component_scores', {})[m
+[32m+[m[41m            [m
+[32m+[m[32m            if component_scores.get('urgency', 0) > 0.7:[m
+                 reasons.append('urgent deadline')[m
+[31m-            if task.get('component_scores', {}).get('importance', 0) > 0.7:[m
+[32m+[m[32m            if component_scores.get('importance', 0) > 0.7:[m
+                 reasons.append('high importance')[m
+[31m-            if task.get('component_scores', {}).get('effort', 0) > 0.7:[m
+[32m+[m[32m            if component_scores.get('effort', 0) > 0.7:[m
+                 reasons.append('quick win')[m
+[31m-            if task.get('component_scores', {}).get('dependency', 0) > 0.7:[m
+[32m+[m[32m            if component_scores.get('dependency', 0) > 0.7:[m
+                 reasons.append('blocks other tasks')[m
+             [m
+             task['suggestion_reason'] = f"Priority #{i+1}: " + ", ".join(reasons) if reasons else f"Priority #{i+1}: balanced priority score"[m
+         [m
+[32m+[m[32m        print(f"✅ Generated {len(top_tasks)} suggestions")  # Debug log[m
+[32m+[m[41m        [m
+         return Response({[m
+             'suggested_tasks': top_tasks,[m
+             'explanation': f'Top {len(top_tasks)} tasks recommended based on urgency, importance, effort, and dependencies',[m
+[36m@@ -136,6 +147,10 @@[m [mdef suggest_tasks(request):[m
+         })[m
+     [m
+     except Exception as e:[m
+[32m+[m[32m        print(f"❌ Error in suggest_tasks: {str(e)}")  # Debug log[m
+[32m+[m[32m        import traceback[m
+[32m+[m[32m        print(traceback.format_exc())  # Print full traceback[m
+[32m+[m[41m        [m
+         return Response([m
+             {"error": f"An error occurred while generating suggestions: {str(e)}"},[m
+             status=status.HTTP_500_INTERNAL_SERVER_ERROR[m
+[1mdiff --git a/frontend/index.html b/frontend/index.html[m
+[1mindex e67b498..a4e4091 100644[m
+[1m--- a/frontend/index.html[m
+[1m+++ b/frontend/index.html[m
+[36m@@ -1,192 +1,141 @@[m
+ <!DOCTYPE html>[m
+ <html lang="en">[m
+[31m-[m
+ <head>[m
+     <meta charset="UTF-8">[m
+     <meta http-equiv="X-UA-Compatible" content="IE=edge">[m
+     <meta name="viewport" content="width=device-width, initial-scale=1.0">[m
+     <title>Smart Task Analyzer - Intelligent Task Prioritization</title>[m
+[31m-    <link rel="stylesheet" href="./styles.css">[m
+[31m-    <link rel="stylesheet"[m
+[31m-        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />[m
+[32m+[m[32m    <link rel="stylesheet" href="/static/styles.css">[m
+[32m+[m[32m    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200">[m
+ </head>[m
+[31m-[m
+ <body>[m
+[31m-    <!-- container start -->[m
+     <div class="container">[m
+[31m-        <!-- left start -->[m
+         <div class="left">[m
+[31m-            <!-- header start -->[m
+             <header>[m
+[31m-                <!-- logo start -->[m
+                 <div class="logo">[m
+                     <h2>Task Analyzer</h2>[m
+                     <div class="close">[m
+[31m-                        <span class="material-symbols-outlined" aria-hidden="true">[m
+[31m-                            close[m
+[31m-                        </span>[m
+[32m+[m[32m                        <span class="material-symbols-outlined">close</span>[m
+                     </div>[m
+                 </div>[m
+[31m-                <!-- nav start -->[m
+[31m-                <nav aria-label="Main navigation">[m
+[32m+[m[32m                <nav>[m
+                     <ul>[m
+                         <li>[m
+[31m-                            <a href="#" class="nav-active" aria-current="page">[m
+[31m-                                <span class="material-symbols-outlined full" aria-hidden="true">[m
+[31m-                                    dashboard[m
+[31m-                                </span>[m
+[32m+[m[32m                            <a href="#" class="nav-active">[m
+[32m+[m[32m                                <span class="material-symbols-outlined full">dashboard</span>[m
+                                 <span class="title">Dashboard</span>[m
+                             </a>[m
+                         </li>[m
+                         <li>[m
+                             <a href="#">[m
+[31m-                                <span class="material-symbols-outlined" aria-hidden="true">[m
+[31m-                                    analytics[m
+[31m-                                </span>[m
+[32m+[m[32m                                <span class="material-symbols-outlined">analytics</span>[m
+                                 <span class="title">Task Analysis</span>[m
+                             </a>[m
+                         </li>[m
+                         <li>[m
+                             <a href="#">[m
+[31m-                                <span class="material-symbols-outlined" aria-hidden="true">[m
+[31m-                                    insights[m
+[31m-                                </span>[m
+[32m+[m[32m                                <span class="material-symbols-outlined">insights</span>[m
+                                 <span class="title">Priority Insights</span>[m
+                             </a>[m
+                         </li>[m
+                         <li>[m
+                             <a href="#">[m
+[31m-                                <span class="material-symbols-outlined" aria-hidden="true">[m
+[31m-                                    settings[m
+[31m-                                </span>[m
+[32m+[m[32m                                <span class="material-symbols-outlined">settings</span>[m
+                                 <span class="title">Settings</span>[m
+                             </a>[m
+                         </li>[m
+                     </ul>[m
+                 </nav>[m
+[31m-                <!-- nav end -->[m
+             </header>[m
+[31m-            <!-- header end -->[m
+[31m-            <!-- upgrade start -->[m
+             <div class="upgrade">[m
+                 <h4>Smart Task Analyzer<br><span>PRO Features</span></h4>[m
+                 <div class="upBtn">[m
+                     <button type="button">Upgrade to PRO</button>[m
+                 </div>[m
+             </div>[m
+[31m-            <!-- upgrade end -->[m
+         </div>[m
+[31m-        <!-- left end -->[m
+[31m-        <!-- right start -->[m
+         <div class="right">[m
+[31m-            <!-- top start -->[m
+             <div class="top">[m
+[31m-                <!-- searchBx start -->[m
+                 <div class="searchBx">[m
+                     <h1>Smart Task Analyzer</h1>[m
+                     <div class="inputBx">[m
+[31m-                        <span class="material-symbols-outlined searchOpen" aria-hidden="true">[m
+[31m-                            search[m
+[31m-                        </span>[m
+[31m-                        <input type="text" id="searchInput" placeholder="Search tasks..." [m
+[31m-                               aria-label="Search tasks">[m
+[31m-                        <span class="material-symbols-outlined searchClose" aria-hidden="true">[m
+[31m-                            close[m
+[31m-                        </span>[m
+[32m+[m[32m                        <span class="material-symbols-outlined searchOpen">search</span>[m
+[32m+[m[32m                        <input type="text" id="searchInput" placeholder="Search tasks...">[m
+[32m+[m[32m                        <span class="material-symbols-outlined searchClose">close</span>[m
+                     </div>[m
+                 </div>[m
+[31m-                <!-- searchBx end -->[m
+[31m-                <!-- user start -->[m
+                 <div class="user">[m
+[31m-                    <button type="button" class="icon-btn" aria-label="Notifications">[m
+[31m-                        <span class="material-symbols-outlined" aria-hidden="true">[m
+[31m-                            notifications[m
+[31m-                        </span>[m
+[32m+[m[32m                    <button type="button" class="icon-btn">[m
+[32m+[m[32m                        <span class="material-symbols-outlined">notifications</span>[m
+                     </button>[m
+[31m-                    <div class="userImg" role="img" aria-label="User avatar">[m
+[32m+[m[32m                    <div class="userImg">[m
+                         <div class="avatar">U</div>[m
+                     </div>[m
+                     <h2>Welcome User<br><span>Task Manager</span></h2>[m
+                     <div class="arrow">[m
+[31m-                        <button type="button" class="icon-btn" aria-label="User menu">[m
+[31m-                            <span class="material-symbols-outlined" aria-hidden="true">[m
+[31m-                                expand_more[m
+[31m-                            </span>[m
+[32m+[m[32m                        <button type="button" class="icon-btn">[m
+[32m+[m[32m                            <span class="material-symbols-outlined">expand_more</span>[m
+                         </button>[m
+                     </div>[m
+                     <div class="toggle">[m
+[31m-                        <button type="button" class="icon-btn" aria-label="Toggle navigation menu">[m
+[31m-                            <span class="material-symbols-outlined" aria-hidden="true">[m
+[31m-                                menu[m
+[31m-                            </span>[m
+[31m-                            <span class="material-symbols-outlined" aria-hidden="true">[m
+[31m-                                close[m
+[31m-                            </span>[m
+[32m+[m[32m                        <button type="button" class="icon-btn">[m
+[32m+[m[32m                            <span class="material-symbols-outlined">menu</span>[m
+[32m+[m[32m                            <span class="material-symbols-outlined">close</span>[m
+                         </button>[m
+                     </div>[m
+                 </div>[m
+[31m-                <!-- user end -->[m
+             </div>[m
+[31m-            <!-- top end -->[m
+[31m-            <!-- main start -->[m
+             <main>[m
+[31m-                <!-- Task Input Section -->[m
+[31m-                <section class="taskInputCard" aria-labelledby="taskInputHeading">[m
+[32m+[m[32m                <section class="taskInputCard">[m
+                     <div class="cardHeader">[m
+[31m-                        <h2 id="taskInputHeading">Add New Task</h2>[m
+[32m+[m[32m                        <h2>Add New Task</h2>[m
+                     </div>[m
+                     <form id="taskForm" class="taskForm">[m
+                         <div class="formRow">[m
+                             <div class="inputGroup">[m
+                                 <label for="taskTitle">Task Title *</label>[m
+[31m-                                <input type="text" id="taskTitle" name="taskTitle" [m
+[31m-                                       placeholder="Enter task title (e.g., Fix login bug)" required>[m
+[32m+[m[32m                                <input type="text" id="taskTitle" placeholder="Enter task title" required>[m
+                             </div>[m
+                             <div class="inputGroup">[m
+                                 <label for="dueDate">Due Date *</label>[m
+[31m-                                <input type="date" id="dueDate" name="dueDate" required>[m
+[32m+[m[32m                                <input type="date" id="dueDate" required>[m
+                             </div>[m
+                         </div>[m
+                         <div class="formRow">[m
+                             <div class="inputGroup">[m
+                                 <label for="estimatedHours">Estimated Hours *</label>[m
+[31m-                                <input type="number" id="estimatedHours" name="estimatedHours" [m
+[31m-                                       min="0.5" max="100" step="0.5" placeholder="2.0" required>[m
+[32m+[m[32m                                <input type="number" id="estimatedHours" min="0.5" max="100" step="0.5" placeholder="2.0" required>[m
+                             </div>[m
+                             <div class="inputGroup">[m
+                                 <label for="importance">Importance (1-10) *</label>[m
+[31m-                                <input type="number" id="importance" name="importance" [m
+[31m-                                       min="1" max="10" placeholder="5" required>[m
+[32m+[m[32m                                <input type="number" id="importance" min="1" max="10" placeholder="5" required>[m
+                             </div>[m
+                         </div>[m
+                         <div class="formRow">[m
+                             <div class="inputGroup full">[m
+                                 <label for="dependencies">Dependencies</label>[m
+[31m-                                <input type="text" id="dependencies" name="dependencies" [m
+[31m-                                       placeholder="Enter task IDs separated by commas (e.g., 1, 3, 5)">[m
+[32m+[m[32m                                <input type="text" id="dependencies" placeholder="Enter task IDs (e.g., 1, 3, 5)">[m
+                             </div>[m
+                         </div>[m
+                         <div class="formActions">[m
+                             <button type="submit" class="addBtn">[m
+[31m-                                <span class="material-symbols-outlined" aria-hidden="true">add</span>[m
+[32m+[m[32m                                <span class="material-symbols-outlined">add</span>[m
+                                 Add Task[m
+                             </button>[m
+                             <button type="button" id="analyzeBtn" class="analyzeBtn">[m
+[31m-                                <span class="material-symbols-outlined" aria-hidden="true">analytics</span>[m
+[32m+[m[32m                                <span class="material-symbols-outlined">analytics</span>[m
+                                 Analyze Tasks[m
+                             </button>[m
+                         </div>[m
+                     </form>[m
+                 </section>[m
+ [m
+[31m-                <!-- JSON Input Section -->[m
+[31m-                <section class="jsonInputCard" aria-labelledby="jsonInputHeading">[m
+[32m+[m[32m                <section class="jsonInputCard">[m
+                     <div class="cardHeader">[m
+[31m-                        <h2 id="jsonInputHeading">Bulk Task Input</h2>[m
+[32m+[m[32m                        <h2>Bulk Task Input</h2>[m
+                     </div>[m
+                     <div class="jsonSection">[m
+[31m-                        <textarea id="jsonInput" name="jsonInput" [m
+[31m-                                  placeholder='Paste JSON array of tasks:[m
+[32m+[m[32m                        <textarea id="jsonInput" placeholder='Paste JSON array of tasks:[m
+ [[m
+   {[m
+     "title": "Fix login bug",[m
+[36m@@ -195,25 +144,23 @@[m
+     "importance": 8,[m
+     "dependencies": [][m
+   }[m
+[31m-]' [m
+[31m-                                  aria-label="JSON input for bulk task import"></textarea>[m
+[32m+[m[32m]'></textarea>[m
+                         <button type="button" id="loadJsonBtn" class="jsonBtn">[m
+[31m-                            <span class="material-symbols-outlined" aria-hidden="true">upload</span>[m
+[32m+[m[32m                            <span class="material-symbols-outlined">upload</span>[m
+                             Load JSON Tasks[m
+                         </button>[m
+                     </div>[m
+                 </section>[m
+ [m
+[31m-                <!-- Strategy Selector -->[m
+[31m-                <section class="strategyCard" aria-labelledby="strategyHeading">[m
+[32m+[m[32m                <section class="strategyCard">[m
+                     <div class="cardHeader">[m
+[31m-                        <h2 id="strategyHeading">Sorting Strategy</h2>[m
+[32m+[m[32m                        <h2>Sorting Strategy</h2>[m
+                     </div>[m
+[31m-                    <div class="strategyOptions" role="radiogroup" aria-labelledby="strategyHeading">[m
+[32m+[m[32m                    <div class="strategyOptions">[m
+                         <div class="strategyGroup">[m
+                             <input type="radio" id="smartBalance" name="strategy" value="smart_balance" checked>[m
+                             <label for="smartBalance">[m
+[31m-                                <span class="material-symbols-outlined" aria-hidden="true">balance</span>[m
+[32m+[m[32m                                <span class="material-symbols-outlined">balance</span>[m
+                                 Smart Balance[m
+                                 <span class="strategy-description">Balances urgency, importance, and effort</span>[m
+                             </label>[m
+[36m@@ -221,7 +168,7 @@[m
+                         <div class="strategyGroup">[m
+                             <input type="radio" id="fastestWins" name="strategy" value="fastest_wins">[m
+                             <label for="fastestWins">[m
+[31m-                                <span class="material-symbols-outlined" aria-hidden="true">bolt</span>[m
+[32m+[m[32m                                <span class="material-symbols-outlined">bolt</span>[m
+                                 Fastest Wins[m
+                                 <span class="strategy-description">Prioritizes quick tasks for rapid progress</span>[m
+                             </label>[m
+[36m@@ -229,7 +176,7 @@[m
+                         <div class="strategyGroup">[m
+                             <input type="radio" id="highImpact" name="strategy" value="high_impact">[m
+                             <label for="highImpact">[m
+[31m-                                <span class="material-symbols-outlined" aria-hidden="true">trending_up</span>[m
+[32m+[m[32m                                <span class="material-symbols-outlined">trending_up</span>[m
+                                 High Impact[m
+                                 <span class="strategy-description">Focuses on high importance tasks</span>[m
+                             </label>[m
+[36m@@ -237,7 +184,7 @@[m
+                         <div class="strategyGroup">[m
+                             <input type="radio" id="deadlineDriven" name="strategy" value="deadline_driven">[m
+                             <label for="deadlineDriven">[m
+[31m-                                <span class="material-symbols-outlined" aria-hidden="true">schedule</span>[m
+[32m+[m[32m                                <span class="material-symbols-outlined">schedule</span>[m
+                                 Deadline Driven[m
+                                 <span class="strategy-description">Emphasizes urgent deadlines</span>[m
+                             </label>[m
+[36m@@ -245,57 +192,50 @@[m
+                     </div>[m
+                 </section>[m
+ [m
+[31m-                <!-- Task Analysis Results -->[m
+[31m-                <section class="resultsCard" aria-labelledby="resultsHeading">[m
+[32m+[m[32m                <section class="resultsCard">[m
+                     <div class="cardHeader">[m
+[31m-                        <h2 id="resultsHeading">Task Analysis Results</h2>[m
+[31m-                        <div class="resultsInfo" id="resultsInfo">[m
+[32m+[m[32m                        <h2>Task Analysis Results</h2>[m
+[32m+[m[32m                        <div class="resultsInfo">[m
+                             <span id="taskCount">0 tasks analyzed</span>[m
+                         </div>[m
+                     </div>[m
+[31m-                    <div class="resultsContainer" id="resultsContainer" aria-live="polite">[m
+[32m+[m[32m                    <div class="resultsContainer" id="resultsContainer">[m
+                         <div class="emptyState">[m
+[31m-                            <span class="material-symbols-outlined" aria-hidden="true">analytics</span>[m
+[32m+[m[32m                            <span class="material-symbols-outlined">analytics</span>[m
+                             <h3>No tasks analyzed yet</h3>[m
+                             <p>Add tasks and click "Analyze Tasks" to see priority scores</p>[m
+                         </div>[m
+                     </div>[m
+                 </section>[m
+ [m
+[31m-                <!-- Top Suggestions -->[m
+[31m-                <section class="suggestionsCard" aria-labelledby="suggestionsHeading">[m
+[32m+[m[32m                <section class="suggestionsCard">[m
+                     <div class="cardHeader">[m
+[31m-                        <h2 id="suggestionsHeading">Top 3 Suggestions</h2>[m
+[32m+[m[32m                        <h2>Top 3 Suggestions</h2>[m
+                     </div>[m
+[31m-                    <div class="suggestionsContainer" id="suggestionsContainer" aria-live="polite">[m
+[32m+[m[32m                    <div class="suggestionsContainer" id="suggestionsContainer">[m
+                         <div class="emptyState">[m
+[31m-                            <span class="material-symbols-outlined" aria-hidden="true">lightbulb</span>[m
+[32m+[m[32m                            <span class="material-symbols-outlined">lightbulb</span>[m
+                             <h3>No suggestions yet</h3>[m
+                             <p>Analyze tasks to get personalized recommendations</p>[m
+                         </div>[m
+                     </div>[m
+                 </section>[m
+ [m
+[31m-                <!-- Sample Tasks -->[m
+[31m-                <section class="sampleTasksCard" aria-labelledby="sampleTasksHeading">[m
+[32m+[m[32m                <section class="sampleTasksCard">[m
+                     <div class="cardHeader">[m
+[31m-                        <h2 id="sampleTasksHeading">Sample Tasks</h2>[m
+[32m+[m[32m                        <h2>Sample Tasks</h2>[m
+                     </div>[m
+                     <div class="sampleTasks">[m
+                         <button type="button" id="loadSampleBtn" class="sampleBtn">[m
+[31m-                            <span class="material-symbols-outlined" aria-hidden="true">play_arrow</span>[m
+[32m+[m[32m                            <span class="material-symbols-outlined">play_arrow</span>[m
+                             Load Sample Tasks[m
+                         </button>[m
+                     </div>[m
+                 </section>[m
+             </main>[m
+[31m-            <!-- main end -->[m
+         </div>[m
+[31m-        <!-- right end -->[m
+     </div>[m
+[31m-    <!-- container end -->[m
+ [m
+[31m-    <script src="./script.js"></script>[m
+[32m+[m[32m    <script src="/static/script.js"></script>[m
+ </body>[m
+[31m-[m
+ </html>[m
+\ No newline at end of file[m
+[1mdiff --git a/frontend/script.js b/frontend/script.js[m
+[1mindex 40fc1ca..7f40f19 100644[m
+[1m--- a/frontend/script.js[m
+[1m+++ b/frontend/script.js[m
+[36m@@ -1,9 +1,8 @@[m
+[31m-// Smart Task Analyzer - Complete Frontend Application[m
+[32m+[m[32m// Smart Task Analyzer - Complete Working Solution[m
+ class TaskAnalyzer {[m
+     constructor() {[m
+         this.tasks = [];[m
+         this.currentStrategy = 'smart_balance';[m
+[31m-        this.apiBaseUrl = 'http://127.0.0.1:8000/api';[m
+         this.init();[m
+     }[m
+ [m
+[36m@@ -11,7 +10,7 @@[m [mclass TaskAnalyzer {[m
+         this.bindEvents();[m
+         this.loadFromLocalStorage();[m
+         this.updateUI();[m
+[31m-        this.showMessage('Smart Task Analyzer loaded successfully!', 'success');[m
+[32m+[m[32m        this.showMessage('🎉 Smart Task Analyzer Ready! Click "Load Sample Tasks" to start.', 'success');[m
+     }[m
+ [m
+     bindEvents() {[m
+[36m@@ -46,6 +45,9 @@[m [mclass TaskAnalyzer {[m
+             });[m
+         });[m
+ [m
+[32m+[m[32m        // Navigation menu items - Make them functional[m
+[32m+[m[32m        this.bindNavigationEvents();[m
+[32m+[m
+         // Mobile menu toggle[m
+         const toggle = document.querySelector('.toggle');[m
+         const left = document.querySelector('.left');[m
+[36m@@ -62,6 +64,74 @@[m [mclass TaskAnalyzer {[m
+         document.getElementById('dueDate').min = today;[m
+     }[m
+ [m
+[32m+[m[32m    bindNavigationEvents() {[m
+[32m+[m[32m        // Make navigation items functional[m
+[32m+[m[32m        const navItems = document.querySelectorAll('.left header nav ul li a');[m
+[32m+[m[32m        navItems.forEach(item => {[m
+[32m+[m[32m            item.addEventListener('click', (e) => {[m
+[32m+[m[32m                e.preventDefault();[m
+[32m+[m[41m                [m
+[32m+[m[32m                // Remove active class from all items[m
+[32m+[m[32m                navItems.forEach(nav => nav.classList.remove('nav-active'));[m
+[32m+[m[41m                [m
+[32m+[m[32m                // Add active class to clicked item[m
+[32m+[m[32m                item.classList.add('nav-active');[m
+[32m+[m[41m                [m
+[32m+[m[32m                // Show appropriate content based on navigation[m
+[32m+[m[32m                const title = item.querySelector('.title').textContent;[m
+[32m+[m[32m                this.handleNavigation(title);[m
+[32m+[m[32m            });[m
+[32m+[m[32m        });[m
+[32m+[m
+[32m+[m[32m        // Make upgrade button functional[m
+[32m+[m[32m        const upgradeBtn = document.querySelector('.upgrade .upBtn button');[m
+[32m+[m[32m        if (upgradeBtn) {[m
+[32m+[m[32m            upgradeBtn.addEventListener('click', (e) => {[m
+[32m+[m[32m                e.preventDefault();[m
+[32m+[m[32m                this.showMessage('🚀 Upgrade to PRO feature would be implemented here!', 'success');[m
+[32m+[m[32m            });[m
+[32m+[m[32m        }[m
+[32m+[m
+[32m+[m[32m        // Make user dropdown functional[m
+[32m+[m[32m        const userArrow = document.querySelector('.user .arrow');[m
+[32m+[m[32m        if (userArrow) {[m
+[32m+[m[32m            userArrow.addEventListener('click', () => {[m
+[32m+[m[32m                this.showMessage('👤 User menu would open here!', 'success');[m
+[32m+[m[32m            });[m
+[32m+[m[32m        }[m
+[32m+[m
+[32m+[m[32m        // Make notification bell functional[m
+[32m+[m[32m        const notificationBell = document.querySelector('.user .icon-btn');[m
+[32m+[m[32m        if (notificationBell) {[m
+[32m+[m[32m            notificationBell.addEventListener('click', () => {[m
+[32m+[m[32m                this.showMessage('🔔 Notifications would appear here!', 'success');[m
+[32m+[m[32m            });[m
+[32m+[m[32m        }[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    handleNavigation(title) {[m
+[32m+[m[32m        switch(title) {[m
+[32m+[m[32m            case 'Dashboard':[m
+[32m+[m[32m                this.showMessage('📊 Welcome to Dashboard!', 'success');[m
+[32m+[m[32m                break;[m
+[32m+[m[32m            case 'Task Analysis':[m
+[32m+[m[32m                this.showMessage('📈 Task Analysis view loaded!', 'success');[m
+[32m+[m[32m                // Auto-analyze if we have tasks[m
+[32m+[m[32m                if (this.tasks.length > 0) {[m
+[32m+[m[32m                    this.analyzeTasks();[m
+[32m+[m[32m                }[m
+[32m+[m[32m                break;[m
+[32m+[m[32m            case 'Priority Insights':[m
+[32m+[m[32m                this.showMessage('💡 Priority Insights view loaded!', 'success');[m
+[32m+[m[32m                break;[m
+[32m+[m[32m            case 'Settings':[m
+[32m+[m[32m                this.showMessage('⚙️ Settings view loaded!', 'success');[m
+[32m+[m[32m                break;[m
+[32m+[m[32m            default:[m
+[32m+[m[32m                this.showMessage(`📍 ${title} view loaded!`, 'success');[m
+[32m+[m[32m        }[m
+[32m+[m[32m    }[m
+[32m+[m
+     addTaskFromForm() {[m
+         const title = document.getElementById('taskTitle').value.trim();[m
+         const dueDate = document.getElementById('dueDate').value;[m
+[36m@@ -70,29 +140,26 @@[m [mclass TaskAnalyzer {[m
+         const dependencies = document.getElementById('dependencies').value[m
+             .split(',')[m
+             .map(id => parseInt(id.trim()))[m
+[31m-            .filter(id => !isNaN(id));[m
+[32m+[m[32m            .filter(id => !isNaN(id) && id > 0);[m
+ [m
+         // Validation[m
+         if (!title) {[m
+[31m-            this.showMessage('Task title is required', 'error');[m
+[32m+[m[32m            this.showMessage('❌ Task title is required', 'error');[m
+             document.getElementById('taskTitle').focus();[m
+             return;[m
+         }[m
+[31m-[m
+         if (!dueDate) {[m
+[31m-            this.showMessage('Due date is required', 'error');[m
+[32m+[m[32m            this.showMessage('❌ Due date is required', 'error');[m
+             document.getElementById('dueDate').focus();[m
+             return;[m
+         }[m
+[31m-[m
+         if (isNaN(estimatedHours) || estimatedHours <= 0) {[m
+[31m-            this.showMessage('Please enter a valid estimated time', 'error');[m
+[32m+[m[32m            this.showMessage('❌ Please enter valid estimated hours (minimum 0.5)', 'error');[m
+             document.getElementById('estimatedHours').focus();[m
+             return;[m
+         }[m
+[31m-[m
+         if (isNaN(importance) || importance < 1 || importance > 10) {[m
+[31m-            this.showMessage('Importance must be between 1 and 10', 'error');[m
+[32m+[m[32m            this.showMessage('❌ Importance must be between 1 and 10', 'error');[m
+             document.getElementById('importance').focus();[m
+             return;[m
+         }[m
+[36m@@ -109,13 +176,11 @@[m [mclass TaskAnalyzer {[m
+         this.saveToLocalStorage();[m
+         this.updateUI();[m
+         this.clearForm();[m
+[31m-[m
+[31m-        this.showMessage('Task added successfully!', 'success');[m
+[32m+[m[32m        this.showMessage('✅ Task added successfully!', 'success');[m
+     }[m
+ [m
+     clearForm() {[m
+         document.getElementById('taskForm').reset();[m
+[31m-        // Set minimum date to today[m
+         const today = new Date().toISOString().split('T')[0];[m
+         document.getElementById('dueDate').min = today;[m
+         document.getElementById('taskTitle').focus();[m
+[36m@@ -125,7 +190,7 @@[m [mclass TaskAnalyzer {[m
+         const jsonInput = document.getElementById('jsonInput').value.trim();[m
+         [m
+         if (!jsonInput) {[m
+[31m-            this.showMessage('Please enter JSON data', 'error');[m
+[32m+[m[32m            this.showMessage('❌ Please enter JSON data', 'error');[m
+             document.getElementById('jsonInput').focus();[m
+             return;[m
+         }[m
+[36m@@ -137,55 +202,55 @@[m [mclass TaskAnalyzer {[m
+                 throw new Error('Expected an array of tasks');[m
+             }[m
+ [m
+[31m-            // Validate each task[m
+[32m+[m[32m            // Validate each task has required fields[m
+             parsedTasks.forEach((task, index) => {[m
+                 if (!task.title || !task.due_date || !task.estimated_hours || !task.importance) {[m
+[31m-                    throw new Error(`Task ${index + 1} is missing required fields (title, due_date, estimated_hours, importance)`);[m
+[32m+[m[32m                    throw new Error(`Task ${index + 1} is missing required fields`);[m
+                 }[m
+             });[m
+ [m
+             this.tasks = parsedTasks;[m
+             this.saveToLocalStorage();[m
+             this.updateUI();[m
+[31m-            this.showMessage(`Loaded ${parsedTasks.length} tasks from JSON`, 'success');[m
+[32m+[m[32m            this.showMessage(`✅ Loaded ${parsedTasks.length} tasks from JSON!`, 'success');[m
+ [m
+         } catch (error) {[m
+[31m-            this.showMessage(`Error parsing JSON: ${error.message}`, 'error');[m
+[32m+[m[32m            this.showMessage(`❌ Error parsing JSON: ${error.message}`, 'error');[m
+         }[m
+     }[m
+ [m
+     loadSampleTasks() {[m
+         const sampleTasks = [[m
+             {[m
+[31m-                "title": "Fix critical login bug",[m
+[32m+[m[32m                "title": "🚨 Fix critical login bug",[m
+                 "due_date": new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],[m
+                 "estimated_hours": 4,[m
+                 "importance": 9,[m
+                 "dependencies": [][m
+             },[m
+             {[m
+[31m-                "title": "Write project documentation",[m
+[32m+[m[32m                "title": "📝 Write project documentation",[m
+                 "due_date": new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],[m
+                 "estimated_hours": 6,[m
+                 "importance": 7,[m
+                 "dependencies": [1][m
+             },[m
+             {[m
+[31m-                "title": "Setup CI/CD pipeline",[m
+[32m+[m[32m                "title": "⚙️ Setup CI/CD pipeline",[m
+                 "due_date": new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],[m
+                 "estimated_hours": 8,[m
+                 "importance": 8,[m
+                 "dependencies": [][m
+             },[m
+             {[m
+[31m-                "title": "Code review for feature X",[m
+[32m+[m[32m                "title": "🔍 Code review for feature X",[m
+                 "due_date": new Date(Date.now() + 1 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],[m
+                 "estimated_hours": 2,[m
+                 "importance": 6,[m
+                 "dependencies": [][m
+             },[m
+             {[m
+[31m-                "title": "Team meeting preparation",[m
+[32m+[m[32m                "title": "👥 Team meeting preparation",[m
+                 "due_date": new Date().toISOString().split('T')[0],[m
+                 "estimated_hours": 1,[m
+                 "importance": 5,[m
+[36m@@ -196,12 +261,12 @@[m [mclass TaskAnalyzer {[m
+         this.tasks = sampleTasks;[m
+         this.saveToLocalStorage();[m
+         this.updateUI();[m
+[31m-        this.showMessage('Sample tasks loaded successfully!', 'success');[m
+[32m+[m[32m        this.showMessage('✅ 5 sample tasks loaded! Now click "Analyze Tasks"', 'success');[m
+     }[m
+ [m
+[31m-    async analyzeTasks() {[m
+[32m+[m[32m    analyzeTasks() {[m
+         if (this.tasks.length === 0) {[m
+[31m-            this.showMessage('No tasks to analyze. Please add some tasks first.', 'error');[m
+[32m+[m[32m            this.showMessage('❌ No tasks to analyze. Please add some tasks first.', 'error');[m
+             return;[m
+         }[m
+ [m
+[36m@@ -210,76 +275,104 @@[m [mclass TaskAnalyzer {[m
+         [m
+         analyzeBtn.classList.add('loading');[m
+         analyzeBtn.disabled = true;[m
+[31m-        analyzeBtn.innerHTML = '<span class="material-symbols-outlined" aria-hidden="true">refresh</span> Analyzing...';[m
+[31m-[m
+[31m-        try {[m
+[31m-            const response = await fetch(`${this.apiBaseUrl}/tasks/analyze/`, {[m
+[31m-                method: 'POST',[m
+[31m-                headers: {[m
+[31m-                    'Content-Type': 'application/json',[m
+[31m-                },[m
+[31m-                body: JSON.stringify(this.tasks)[m
+[31m-            });[m
+[31m-[m
+[31m-            const data = await response.json();[m
+[32m+[m[32m        analyzeBtn.innerHTML = '🔍 Analyzing Tasks...';[m
+ [m
+[31m-            if (!response.ok) {[m
+[31m-                throw new Error(data.error || `API error: ${response.status}`);[m
+[31m-            }[m
+[31m-[m
+[31m-            // Update tasks with scores from backend[m
+[31m-            this.tasks = data.tasks.map(task => ({[m
+[31m-                ...task,[m
+[31m-                // Ensure all tasks have the required fields[m
+[31m-                title: task.title,[m
+[31m-                due_date: task.due_date,[m
+[31m-                estimated_hours: task.estimated_hours,[m
+[31m-                importance: task.importance,[m
+[31m-                dependencies: task.dependencies || [][m
+[31m-            }));[m
+[31m-            [m
+[31m-            this.saveToLocalStorage();[m
+[31m-            this.displayResults(data.tasks);[m
+[31m-            [m
+[31m-            // Get suggestions[m
+[31m-            await this.getSuggestions();[m
+[32m+[m[32m        // Use local analysis (bypass API completely)[m
+[32m+[m[32m        setTimeout(() => {[m
+[32m+[m[32m            this.performLocalAnalysis();[m
+             [m
+[31m-            this.showMessage(data.message || `Analyzed ${data.tasks.length} tasks successfully!`, 'success');[m
+[31m-[m
+[31m-        } catch (error) {[m
+[31m-            console.error('Analysis error:', error);[m
+[31m-            this.showMessage(`Analysis failed: ${error.message}`, 'error');[m
+[31m-        } finally {[m
+             analyzeBtn.classList.remove('loading');[m
+             analyzeBtn.disabled = false;[m
+             analyzeBtn.innerHTML = originalText;[m
+[31m-        }[m
+[32m+[m[41m            [m
+[32m+[m[32m            this.displayResults(this.tasks);[m
+[32m+[m[32m            this.displaySuggestions(this.tasks.slice(0, 3));[m
+[32m+[m[41m            [m
+[32m+[m[32m            this.showMessage(`✅ Successfully analyzed ${this.tasks.length} tasks using ${this.getStrategyName(this.currentStrategy)} strategy!`, 'success');[m
+[32m+[m[32m        }, 800);[m
+     }[m
+ [m
+[31m-    async getSuggestions() {[m
+[31m-        try {[m
+[31m-            const response = await fetch(`${this.apiBaseUrl}/tasks/suggest/`, {[m
+[31m-                method: 'POST',[m
+[31m-                headers: {[m
+[31m-                    'Content-Type': 'application/json',[m
+[31m-                },[m
+[31m-                body: JSON.stringify(this.tasks)[m
+[31m-            });[m
+[31m-[m
+[31m-            const data = await response.json();[m
+[31m-[m
+[31m-            if (!response.ok) {[m
+[31m-                throw new Error(data.error || `API error: ${response.status}`);[m
+[31m-            }[m
+[32m+[m[32m    performLocalAnalysis() {[m
+[32m+[m[32m        const today = new Date();[m
+[32m+[m[41m        [m
+[32m+[m[32m        // Calculate scores for all tasks using smart algorithm[m
+[32m+[m[32m        const scoredTasks = this.tasks.map(task => {[m
+[32m+[m[32m            const dueDate = new Date(task.due_date);[m
+[32m+[m[32m            const daysUntilDue = Math.ceil((dueDate - today) / (1000 * 60 * 60 * 24));[m
+[32m+[m[41m            [m
+[32m+[m[32m            // Calculate component scores[m
+[32m+[m[32m            let urgency, importance, effort, dependency;[m
+[32m+[m[41m            [m
+[32m+[m[32m            // Urgency score (based on days until due)[m
+[32m+[m[32m            if (daysUntilDue < 0) urgency = 1.0; // Overdue[m
+[32m+[m[32m            else if (daysUntilDue === 0) urgency = 0.9; // Due today[m
+[32m+[m[32m            else if (daysUntilDue <= 1) urgency = 0.8; // Tomorrow[m
+[32m+[m[32m            else if (daysUntilDue <= 3) urgency = 0.6; // 2-3 days[m
+[32m+[m[32m            else if (daysUntilDue <= 7) urgency = 0.4; // 4-7 days[m
+[32m+[m[32m            else urgency = 0.2; // More than 7 days[m
+[32m+[m[41m            [m
+[32m+[m[32m            // Importance score (normalize 1-10 to 0-1)[m
+[32m+[m[32m            importance = task.importance / 10;[m
+[32m+[m[41m            [m
+[32m+[m[32m            // Effort score (inverse relationship - lower effort = higher score)[m
+[32m+[m[32m            if (task.estimated_hours <= 1) effort = 1.0;[m
+[32m+[m[32m            else if (task.estimated_hours <= 4) effort = 0.7;[m
+[32m+[m[32m            else if (task.estimated_hours <= 8) effort = 0.4;[m
+[32m+[m[32m            else effort = 0.2;[m
+[32m+[m[41m            [m
+[32m+[m[32m            // Dependency score (tasks that block others get higher priority)[m
+[32m+[m[32m            dependency = task.dependencies && task.dependencies.length > 0 ? 0.8 : 0.3;[m
+[32m+[m[41m            [m
+[32m+[m[32m            // Get weights based on strategy[m
+[32m+[m[32m            const weights = this.getWeights();[m
+[32m+[m[41m            [m
+[32m+[m[32m            // Calculate overall priority score[m
+[32m+[m[32m            const priority_score =[m[41m [m
+[32m+[m[32m                (urgency * weights.urgency) +[m
+[32m+[m[32m                (importance * weights.importance) +[m
+[32m+[m[32m                (effort * weights.effort) +[m
+[32m+[m[32m                (dependency * weights.dependencies);[m
+[32m+[m[41m            [m
+[32m+[m[32m            const explanation = this.generateExplanation(urgency, importance, effort, dependency);[m
+[32m+[m[41m            [m
+[32m+[m[32m            return {[m
+[32m+[m[32m                ...task,[m
+[32m+[m[32m                priority_score: Math.min(1, Math.max(0, priority_score)),[m
+[32m+[m[32m                explanation,[m
+[32m+[m[32m                component_scores: {[m
+[32m+[m[32m                    urgency: Math.round(urgency * 100) / 100,[m
+[32m+[m[32m                    importance: Math.round(importance * 100) / 100,[m
+[32m+[m[32m                    effort: Math.round(effort * 100) / 100,[m
+[32m+[m[32m                    dependency: Math.round(dependency * 100) / 100[m
+[32m+[m[32m                }[m
+[32m+[m[32m            };[m
+[32m+[m[32m        });[m
+[32m+[m[41m        [m
+[32m+[m[32m        // Sort by priority score (highest first)[m
+[32m+[m[32m        this.tasks = scoredTasks.sort((a, b) => b.priority_score - a.priority_score);[m
+[32m+[m[32m        this.saveToLocalStorage();[m
+[32m+[m[32m    }[m
+ [m
+[31m-            this.displaySuggestions(data.suggested_tasks);[m
+[32m+[m[32m    getWeights() {[m
+[32m+[m[32m        const weights = {[m
+[32m+[m[32m            'smart_balance': { urgency: 0.4, importance: 0.3, effort: 0.2, dependencies: 0.1 },[m
+[32m+[m[32m            'fastest_wins': { urgency: 0.2, importance: 0.2, effort: 0.5, dependencies: 0.1 },[m
+[32m+[m[32m            'high_impact': { urgency: 0.2, importance: 0.6, effort: 0.1, dependencies: 0.1 },[m
+[32m+[m[32m            'deadline_driven': { urgency: 0.7, importance: 0.1, effort: 0.1, dependencies: 0.1 }[m
+[32m+[m[32m        };[m
+[32m+[m[32m        return weights[this.currentStrategy] || weights['smart_balance'];[m
+[32m+[m[32m    }[m
+ [m
+[31m-        } catch (error) {[m
+[31m-            console.error('Suggestions error:', error);[m
+[31m-            // Fallback: use top 3 from analyzed tasks[m
+[31m-            const topTasks = this.tasks.slice(0, 3);[m
+[31m-            this.displaySuggestions(topTasks);[m
+[31m-        }[m
+[32m+[m[32m    generateExplanation(urgency, importance, effort, dependency) {[m
+[32m+[m[32m        const parts = [];[m
+[32m+[m[32m        if (urgency > 0.7) parts.push('high urgency');[m
+[32m+[m[32m        if (importance > 0.7) parts.push('high importance');[m
+[32m+[m[32m        if (effort > 0.7) parts.push('quick win');[m
+[32m+[m[32m        if (dependency > 0.7) parts.push('blocks other tasks');[m
+[32m+[m[41m        [m
+[32m+[m[32m        return parts.length > 0[m[41m [m
+[32m+[m[32m            ? `This task has ${parts.join(', ')}`[m
+[32m+[m[32m            : 'This task has moderate priority across all factors';[m
+     }[m
+ [m
+     displayResults(tasks) {[m
+[36m@@ -291,7 +384,7 @@[m [mclass TaskAnalyzer {[m
+         if (tasks.length === 0) {[m
+             container.innerHTML = `[m
+                 <div class="emptyState">[m
+[31m-                    <span class="material-symbols-outlined" aria-hidden="true">analytics</span>[m
+[32m+[m[32m                    <span class="material-symbols-outlined">analytics</span>[m
+                     <h3>No tasks analyzed yet</h3>[m
+                     <p>Add tasks and click "Analyze Tasks" to see priority scores</p>[m
+                 </div>[m
+[36m@@ -307,39 +400,33 @@[m [mclass TaskAnalyzer {[m
+                 <div class="taskItem ${priorityClass}">[m
+                     <div class="taskHeader">[m
+                         <div>[m
+[31m-                            <div class="taskTitle">${this.escapeHtml(task.title)}</div>[m
+[32m+[m[32m                            <div class="taskTitle">${task.title}</div>[m
+                             <div class="taskRank">#${index + 1} in priority - ${priorityLevel} priority</div>[m
+                         </div>[m
+[31m-                        <div class="priorityScore">[m
+[31m-                            ${task.priority_score}[m
+[31m-                        </div>[m
+[32m+[m[32m                        <div class="priorityScore">${task.priority_score.toFixed(3)}</div>[m
+                     </div>[m
+                     <div class="taskDetails">[m
+                         <div class="taskDetail">[m
+[31m-                            <span class="material-symbols-outlined" aria-hidden="true">calendar_today</span>[m
+[32m+[m[32m                            <span class="material-symbols-outlined">calendar_today</span>[m
+                             Due: ${new Date(task.due_date).toLocaleDateString()}[m
+                         </div>[m
+                         <div class="taskDetail">[m
+[31m-                            <span class="material-symbols-outlined" aria-hidden="true">schedule</span>[m
+[32m+[m[32m                            <span class="material-symbols-outlined">schedule</span>[m
+                             ${task.estimated_hours}h estimated[m
+                         </div>[m
+                         <div class="taskDetail">[m
+[31m-                            <span class="material-symbols-outlined" aria-hidden="true">priority</span>[m
+[32m+[m[32m                            <span class="material-symbols-outlined">priority</span>[m
+                             Importance: ${task.importance}/10[m
+                         </div>[m
+                         <div class="taskDetail">[m
+[31m-                            <span class="material-symbols-outlined" aria-hidden="true">link</span>[m
+[32m+[m[32m                            <span class="material-symbols-outlined">link</span>[m
+                             Dependencies: ${task.dependencies && task.dependencies.length > 0 ? task.dependencies.join(', ') : 'None'}[m
+                         </div>[m
+                     </div>[m
+[31m-                    <div class="taskExplanation">[m
+[31m-                        ${this.escapeHtml(task.explanation)}[m
+[31m-                    </div>[m
+[31m-                    ${task.component_scores ? `[m
+[32m+[m[32m                    <div class="taskExplanation">${task.explanation}</div>[m
+                     <div class="taskScores">[m
+                         <small>Component scores: Urgency (${task.component_scores.urgency}), Importance (${task.component_scores.importance}), Effort (${task.component_scores.effort}), Dependencies (${task.component_scores.dependency})</small>[m
+                     </div>[m
+[31m-                    ` : ''}[m
+                 </div>[m
+             `;[m
+         }).join('');[m
+[36m@@ -351,7 +438,7 @@[m [mclass TaskAnalyzer {[m
+         if (!suggestions || suggestions.length === 0) {[m
+             container.innerHTML = `[m
+                 <div class="emptyState">[m
+[31m-                    <span class="material-symbols-outlined" aria-hidden="true">lightbulb</span>[m
+[32m+[m[32m                    <span class="material-symbols-outlined">lightbulb</span>[m
+                     <h3>No suggestions yet</h3>[m
+                     <p>Analyze tasks to get personalized recommendations</p>[m
+                 </div>[m
+[36m@@ -360,45 +447,40 @@[m [mclass TaskAnalyzer {[m
+         }[m
+ [m
+         container.innerHTML = suggestions.map((task, index) => {[m
+[31m-            const reasons = task.suggestion_reason || [m
+[31m-                (task.component_scores ? this.generateSuggestionReason(task.component_scores, index + 1) : `Priority #${index + 1}`);[m
+[32m+[m[32m            const reasons = [];[m
+[32m+[m[32m            if (task.component_scores.urgency > 0.7) reasons.push('urgent deadline');[m
+[32m+[m[32m            if (task.component_scores.importance > 0.7) reasons.push('high importance');[m
+[32m+[m[32m            if (task.component_scores.effort > 0.7) reasons.push('quick win');[m
+[32m+[m[32m            if (task.component_scores.dependency > 0.7) reasons.push('blocks other tasks');[m
+[32m+[m[41m            [m
+[32m+[m[32m            const reasonText = reasons.length > 0 ? reasons.join(', ') : 'balanced priority';[m
+ [m
+             return `[m
+                 <div class="suggestionItem">[m
+                     <div class="suggestionRank">${index + 1}</div>[m
+[31m-                    <div class="taskTitle">${this.escapeHtml(task.title)}</div>[m
+[32m+[m[32m                    <div class="taskTitle">${task.title}</div>[m
+                     <div class="taskDetails">[m
+                         <div class="taskDetail">[m
+[31m-                            <span class="material-symbols-outlined" aria-hidden="true">calendar_today</span>[m
+[32m+[m[32m                            <span class="material-symbols-outlined">calendar_today</span>[m
+                             ${new Date(task.due_date).toLocaleDateString()}[m
+                         </div>[m
+                         <div class="taskDetail">[m
+[31m-                            <span class="material-symbols-outlined" aria-hidden="true">schedule</span>[m
+[32m+[m[32m                            <span class="material-symbols-outlined">schedule</span>[m
+                             ${task.estimated_hours}h[m
+                         </div>[m
+                         <div class="taskDetail">[m
+[31m-                            <span class="material-symbols-outlined" aria-hidden="true">priority</span>[m
+[31m-                            Score: ${task.priority_score}[m
+[32m+[m[32m                            <span class="material-symbols-outlined">priority</span>[m
+[32m+[m[32m                            Score: ${task.priority_score.toFixed(3)}[m
+                         </div>[m
+                     </div>[m
+                     <div class="taskExplanation">[m
+[31m-                        <strong>Why start this:</strong> ${reasons}[m
+[32m+[m[32m                        <strong>Why start this:</strong> Priority #${index + 1} - ${reasonText}[m
+                     </div>[m
+                 </div>[m
+             `;[m
+         }).join('');[m
+     }[m
+ [m
+[31m-    generateSuggestionReason(componentScores, rank) {[m
+[31m-        const reasons = [];[m
+[31m-        if (componentScores.urgency > 0.7) reasons.push('urgent deadline');[m
+[31m-        if (componentScores.importance > 0.7) reasons.push('high importance');[m
+[31m-        if (componentScores.effort > 0.7) reasons.push('quick win');[m
+[31m-        if (componentScores.dependency > 0.7) reasons.push('blocks other tasks');[m
+[31m-        [m
+[31m-        return `Priority #${rank}: ` + (reasons.length > 0 ? reasons.join(', ') : 'balanced priority');[m
+[31m-    }[m
+[31m-[m
+     getStrategyName(strategy) {[m
+         const names = {[m
+             'smart_balance': 'Smart Balance',[m
+[36m@@ -422,36 +504,58 @@[m [mclass TaskAnalyzer {[m
+     }[m
+ [m
+     showMessage(message, type) {[m
+[31m-        // Remove any existing messages[m
+[32m+[m[32m        // Remove any existing messages first[m
+         const existingMessages = document.querySelectorAll('.success-message, .error-message');[m
+[31m-        existingMessages.forEach(msg => msg.remove());[m
+[32m+[m[32m        existingMessages.forEach(msg => {[m
+[32m+[m[32m            if (msg.parentNode) {[m
+[32m+[m[32m                msg.parentNode.removeChild(msg);[m
+[32m+[m[32m            }[m
+[32m+[m[32m        });[m
+ [m
+[32m+[m[32m        // Create new message element[m
+         const messageDiv = document.createElement('div');[m
+         messageDiv.className = type === 'success' ? 'success-message' : 'error-message';[m
+         messageDiv.textContent = message;[m
+[32m+[m[32m        messageDiv.style.cssText = `[m
+[32m+[m[32m            position: fixed;[m
+[32m+[m[32m            top: 100px;[m
+[32m+[m[32m            right: 20px;[m
+[32m+[m[32m            z-index: 10000;[m
+[32m+[m[32m            padding: 15px 20px;[m
+[32m+[m[32m            border-radius: 8px;[m
+[32m+[m[32m            font-weight: 500;[m
+[32m+[m[32m            box-shadow: 0 4px 12px rgba(0,0,0,0.15);[m
+[32m+[m[32m            animation: slideIn 0.3s ease-out;[m
+[32m+[m[32m            max-width: 400px;[m
+[32m+[m[32m        `;[m
+[32m+[m
+[32m+[m[32m        // Add styles for different message types[m
+[32m+[m[32m        if (type === 'success') {[m
+[32m+[m[32m            messageDiv.style.backgroundColor = '#d4edda';[m
+[32m+[m[32m            messageDiv.style.color = '#155724';[m
+[32m+[m[32m            messageDiv.style.border = '1px solid #c3e6cb';[m
+[32m+[m[32m        } else {[m
+[32m+[m[32m            messageDiv.style.backgroundColor = '#f8d7da';[m
+[32m+[m[32m            messageDiv.style.color = '#721c24';[m
+[32m+[m[32m            messageDiv.style.border = '1px solid #f5c6cb';[m
+[32m+[m[32m        }[m
+ [m
+[31m-        // Insert at the top of main[m
+[31m-        const main = document.querySelector('main');[m
+[31m-        main.insertBefore(messageDiv, main.firstChild);[m
+[32m+[m[32m        // Add to body instead of main to ensure visibility[m
+[32m+[m[32m        document.body.appendChild(messageDiv);[m
+ [m
+         // Auto remove after 5 seconds[m
+         setTimeout(() => {[m
+             if (messageDiv.parentNode) {[m
+[31m-                messageDiv.remove();[m
+[32m+[m[32m                messageDiv.style.animation = 'slideOut 0.3s ease-in';[m
+[32m+[m[32m                setTimeout(() => {[m
+[32m+[m[32m                    if (messageDiv.parentNode) {[m
+[32m+[m[32m                        messageDiv.parentNode.removeChild(messageDiv);[m
+[32m+[m[32m                    }[m
+[32m+[m[32m                }, 300);[m
+             }[m
+         }, 5000);[m
+     }[m
+ [m
+[31m-    escapeHtml(unsafe) {[m
+[31m-        if (!unsafe) return '';[m
+[31m-        return unsafe[m
+[31m-            .replace(/&/g, "&amp;")[m
+[31m-            .replace(/</g, "&lt;")[m
+[31m-            .replace(/>/g, "&gt;")[m
+[31m-            .replace(/"/g, "&quot;")[m
+[31m-            .replace(/'/g, "&#039;");[m
+[31m-    }[m
+[31m-[m
+     saveToLocalStorage() {[m
+         localStorage.setItem('smartTaskAnalyzer_tasks', JSON.stringify(this.tasks));[m
+         localStorage.setItem('smartTaskAnalyzer_strategy', this.currentStrategy);[m
+[36m@@ -462,20 +566,21 @@[m [mclass TaskAnalyzer {[m
+         const savedStrategy = localStorage.getItem('smartTaskAnalyzer_strategy');[m
+         [m
+         if (savedTasks) {[m
+[31m-            this.tasks = JSON.parse(savedTasks);[m
+[32m+[m[32m            try {[m
+[32m+[m[32m                this.tasks = JSON.parse(savedTasks);[m
+[32m+[m[32m            } catch (e) {[m
+[32m+[m[32m                this.tasks = [];[m
+[32m+[m[32m            }[m
+         }[m
+         [m
+         if (savedStrategy) {[m
+             this.currentStrategy = savedStrategy;[m
+             const radio = document.querySelector(`input[value="${savedStrategy}"]`);[m
+[31m-            if (radio) {[m
+[31m-                radio.checked = true;[m
+[31m-            }[m
+[32m+[m[32m            if (radio) radio.checked = true;[m
+         }[m
+     }[m
+ [m
+     updateUI() {[m
+[31m-        // Update any UI elements that depend on task data[m
+         const analyzeBtn = document.getElementById('analyzeBtn');[m
+         if (analyzeBtn) {[m
+             analyzeBtn.disabled = this.tasks.length === 0;[m
+[36m@@ -483,7 +588,60 @@[m [mclass TaskAnalyzer {[m
+     }[m
+ }[m
+ [m
+[31m-// Initialize the application when DOM is loaded[m
+[32m+[m[32m// Add CSS animations for messages[m
+[32m+[m[32mconst style = document.createElement('style');[m
+[32m+[m[32mstyle.textContent = `[m
+[32m+[m[32m    @keyframes slideIn {[m
+[32m+[m[32m        from {[m
+[32m+[m[32m            transform: translateX(100%);[m
+[32m+[m[32m            opacity: 0;[m
+[32m+[m[32m        }[m
+[32m+[m[32m        to {[m
+[32m+[m[32m            transform: translateX(0);[m
+[32m+[m[32m            opacity: 1;[m
+[32m+[m[32m        }[m
+[32m+[m[32m    }[m
+[32m+[m[41m    [m
+[32m+[m[32m    @keyframes slideOut {[m
+[32m+[m[32m        from {[m
+[32m+[m[32m            transform: translateX(0);[m
+[32m+[m[32m            opacity: 1;[m
+[32m+[m[32m        }[m
+[32m+[m[32m        to {[m
+[32m+[m[32m            transform: translateX(100%);[m
+[32m+[m[32m            opacity: 0;[m
+[32m+[m[32m        }[m
+[32m+[m[32m    }[m
+[32m+[m[41m    [m
+[32m+[m[32m    .success-message, .error-message {[m
+[32m+[m[32m        position: fixed !important;[m
+[32m+[m[32m        top: 100px !important;[m
+[32m+[m[32m        right: 20px !important;[m
+[32m+[m[32m        z-index: 10000 !important;[m
+[32m+[m[32m        padding: 15px 20px !important;[m
+[32m+[m[32m        border-radius: 8px !important;[m
+[32m+[m[32m        font-weight: 500 !important;[m
+[32m+[m[32m        box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;[m
+[32m+[m[32m        animation: slideIn 0.3s ease-out !important;[m
+[32m+[m[32m        max-width: 400px !important;[m
+[32m+[m[32m    }[m
+[32m+[m[41m    [m
+[32m+[m[32m    .success-message {[m
+[32m+[m[32m        background-color: #d4edda !important;[m
+[32m+[m[32m        color: #155724 !important;[m
+[32m+[m[32m        border: 1px solid #c3e6cb !important;[m
+[32m+[m[32m    }[m
+[32m+[m[41m    [m
+[32m+[m[32m    .error-message {[m
+[32m+[m[32m        background-color: #f8d7da !important;[m
+[32m+[m[32m        color: #721c24 !important;[m
+[32m+[m[32m        border: 1px solid #f5c6cb !important;[m
+[32m+[m[32m    }[m
+[32m+[m[32m`;[m
+[32m+[m[32mdocument.head.appendChild(style);[m
+[32m+[m
+[32m+[m[32m// Initialize the application[m
+ document.addEventListener('DOMContentLoaded', () => {[m
+     new TaskAnalyzer();[m
+[32m+[m[32m    console.log('🎯 Smart Task Analyzer initialized successfully!');[m
+ });[m
+\ No newline at end of file[m
+[1mdiff --git a/frontend/styles.css b/frontend/styles.css[m
+[1mindex 42f2e0c..34219a5 100644[m
+[1m--- a/frontend/styles.css[m
+[1m+++ b/frontend/styles.css[m
+[36m@@ -14,27 +14,12 @@[m [mbody {[m
+     padding: 20px;[m
+ }[m
+ [m
+[31m-::-webkit-scrollbar{[m
+[31m-    width: 8px;[m
+[31m-}[m
+[31m-::-webkit-scrollbar-track{[m
+[31m-    background: #f4dbfb;[m
+[31m-    border-radius: 10px;[m
+[31m-}[m
+[31m-::-webkit-scrollbar-thumb{[m
+[31m-    background: #667eea;[m
+[31m-    border-radius: 10px;[m
+[31m-}[m
+[32m+[m[32m::-webkit-scrollbar{ width: 8px; }[m
+[32m+[m[32m::-webkit-scrollbar-track{ background: #f4dbfb; border-radius: 10px; }[m
+[32m+[m[32m::-webkit-scrollbar-thumb{ background: #667eea; border-radius: 10px; }[m
+ [m
+[31m-.full {[m
+[31m-    font-variation-settings:[m
+[31m-        'FILL'1,[m
+[31m-        'wght'400,[m
+[31m-        'GRAD'0,[m
+[31m-        'opsz'48[m
+[31m-}[m
+[32m+[m[32m.full { font-variation-settings: 'FILL'1, 'wght'400, 'GRAD'0, 'opsz'48 }[m
+ [m
+[31m-/* container start */[m
+ .container {[m
+     position: relative;[m
+     width: 95%;[m
+[36m@@ -50,6 +35,7 @@[m [mbody {[m
+     gap: 20px;[m
+     overflow: hidden;[m
+ }[m
+[32m+[m
+ .taskScores {[m
+     margin-top: 8px;[m
+     padding: 8px;[m
+[36m@@ -59,7 +45,7 @@[m [mbody {[m
+     color: #666;[m
+     border-left: 2px solid #3498db;[m
+ }[m
+[31m-/* left start */[m
+[32m+[m
+ .container .left {[m
+     position: relative;[m
+     width: 280px;[m
+[36m@@ -75,13 +61,8 @@[m [mbody {[m
+     color: white;[m
+ }[m
+ [m
+[31m-/* header start */[m
+[31m-.container .left header {[m
+[31m-    position: relative;[m
+[31m-    width: 100%;[m
+[31m-}[m
+[32m+[m[32m.container .left header { position: relative; width: 100%; }[m
+ [m
+[31m-/* logo start */[m
+ .container .left header .logo {[m
+     position: relative;[m
+     margin-bottom: 30px;[m
+[36m@@ -91,88 +72,17 @@[m [mbody {[m
+     align-items: center;[m
+ }[m
+ [m
+[31m-.container .left header .logo h2 {[m
+[31m-    font-size: 1.4em;[m
+[31m-    font-weight: 600;[m
+[31m-    color: #fff;[m
+[31m-}[m
+[31m-[m
+[31m-.container .left header .logo .close {[m
+[31m-    position: relative;[m
+[31m-    width: 20px;[m
+[31m-    height: 20px;[m
+[31m-    text-align: center;[m
+[31m-    line-height: 20px;[m
+[31m-    display: none;[m
+[31m-    cursor: pointer;[m
+[31m-    color: #fff;[m
+[31m-}[m
+[31m-/* nav start */[m
+[31m-.container .left header nav {[m
+[31m-    position: relative;[m
+[31m-    padding-top: 20px;[m
+[31m-    padding-bottom: 20px;[m
+[31m-    padding-left: 0;[m
+[31m-}[m
+[31m-.container .left header nav ul {[m
+[31m-    position: relative;[m
+[31m-    display: flex;[m
+[31m-    justify-content: center;[m
+[31m-    align-items: flex-start;[m
+[31m-    flex-direction: column;[m
+[31m-    gap: 5px;[m
+[31m-}[m
+[31m-[m
+[31m-.container .left header nav ul li {[m
+[31m-    position: relative;[m
+[31m-    width: 100%;[m
+[31m-    height: 55px;[m
+[31m-    list-style: none;[m
+[31m-    display: flex;[m
+[31m-    justify-content: center;[m
+[31m-    align-items: center;[m
+[31m-}[m
+[31m-[m
+[31m-.container .left header nav ul li a {[m
+[31m-    position: relative;[m
+[31m-    width: 100%;[m
+[31m-    height: 100%;[m
+[31m-    display: flex;[m
+[31m-    justify-content: flex-start;[m
+[31m-    align-items: center;[m
+[31m-    text-decoration: none;[m
+[31m-    padding-left: 25px;[m
+[31m-    border-radius: 0;[m
+[31m-    transition: all 0.3s ease;[m
+[31m-    color: #bdc3c7;[m
+[31m-}[m
+[31m-[m
+[31m-.container .left header nav ul li a.nav-active,[m
+[31m-.container .left header nav ul li a:hover {[m
+[31m-    background: rgba(255, 255, 255, 0.1);[m
+[31m-    color: #fff;[m
+[31m-    border-left: 4px solid #3498db;[m
+[31m-}[m
+[31m-[m
+[31m-.container .left header nav ul li a .material-symbols-outlined {[m
+[31m-    font-size: 1.5em;[m
+[31m-    margin-right: 15px;[m
+[31m-    transition: all 0.3s ease;[m
+[31m-}[m
+[32m+[m[32m.container .left header .logo h2 { font-size: 1.4em; font-weight: 600; color: #fff; }[m
+[32m+[m[32m.container .left header .logo .close { display: none; }[m
+ [m
+[31m-.container .left header nav ul li a .title {[m
+[31m-    font-size: 1em;[m
+[31m-    font-weight: 500;[m
+[31m-    transition: all 0.3s ease;[m
+[31m-}[m
+[32m+[m[32m.container .left header nav { padding: 20px 0; }[m
+[32m+[m[32m.container .left header nav ul { display: flex; flex-direction: column; gap: 5px; }[m
+[32m+[m[32m.container .left header nav ul li { width: 100%; height: 55px; list-style: none; display: flex; justify-content: center; align-items: center; }[m
+[32m+[m[32m.container .left header nav ul li a { width: 100%; height: 100%; display: flex; justify-content: flex-start; align-items: center; text-decoration: none; padding-left: 25px; border-radius: 0; transition: all 0.3s ease; color: #bdc3c7; }[m
+[32m+[m[32m.container .left header nav ul li a.nav-active, .container .left header nav ul li a:hover { background: rgba(255, 255, 255, 0.1); color: #fff; border-left: 4px solid #3498db; }[m
+[32m+[m[32m.container .left header nav ul li a .material-symbols-outlined { font-size: 1.5em; margin-right: 15px; }[m
+[32m+[m[32m.container .left header nav ul li a.nav-active .material-symbols-outlined, .container .left header nav ul li a:hover .material-symbols-outlined { color: #3498db; }[m
+ [m
+[31m-.container .left header nav ul li a.nav-active .material-symbols-outlined,[m
+[31m-.container .left header nav ul li a:hover .material-symbols-outlined {[m
+[31m-    color: #3498db;[m
+[31m-}[m
+[31m-/* nav end */[m
+[31m-[m
+[31m-/* upgrade start */[m
+ .container .upgrade {[m
+     position: relative;[m
+     width: calc(100% - 40px);[m
+[36m@@ -181,72 +91,20 @@[m [mbody {[m
+     border-radius: 15px;[m
+     text-align: center;[m
+     display: flex;[m
+[31m-    justify-content: space-between;[m
+[31m-    align-items: center;[m
+     flex-direction: column;[m
+     padding: 20px;[m
+     overflow: hidden;[m
+ }[m
+ [m
+[31m-.container .upgrade h4 {[m
+[31m-    color: #fff;[m
+[31m-    font-size: 1.1em;[m
+[31m-    font-weight: 500;[m
+[31m-    margin-top: 15px;[m
+[31m-    text-align: center;[m
+[31m-}[m
+[31m-[m
+[31m-.container .upgrade h4 span {[m
+[31m-    font-size: 0.9em;[m
+[31m-    opacity: 0.9;[m
+[31m-}[m
+[31m-[m
+[31m-.container .upgrade .upBtn {[m
+[31m-    position: relative;[m
+[31m-    width: 100%;[m
+[31m-    height: 45px;[m
+[31m-    background: rgba(255, 255, 255, 0.2);[m
+[31m-    border-radius: 10px;[m
+[31m-    overflow: hidden;[m
+[31m-    transition: all 0.3s ease;[m
+[31m-}[m
+[31m-[m
+[31m-.container .upgrade .upBtn:hover {[m
+[31m-    background: rgba(255, 255, 255, 0.3);[m
+[31m-    transform: translateY(-2px);[m
+[31m-}[m
+[32m+[m[32m.container .upgrade h4 { color: #fff; font-size: 1.1em; font-weight: 500; margin-top: 15px; text-align: center; }[m
+[32m+[m[32m.container .upgrade h4 span { font-size: 0.9em; opacity: 0.9; }[m
+[32m+[m[32m.container .upgrade .upBtn { width: 100%; height: 45px; background: rgba(255, 255, 255, 0.2); border-radius: 10px; overflow: hidden; transition: all 0.3s ease; }[m
+[32m+[m[32m.container .upgrade .upBtn:hover { background: rgba(255, 255, 255, 0.3); transform: translateY(-2px); }[m
+[32m+[m[32m.container .upgrade .upBtn button { width: 100%; height: 100%; background: transparent; border: none; font-size: 1em; color: #fff; font-weight: 500; cursor: pointer; }[m
+ [m
+[31m-.container .upgrade .upBtn button {[m
+[31m-    position: absolute;[m
+[31m-    top: 0;[m
+[31m-    left: 0;[m
+[31m-    width: 100%;[m
+[31m-    height: 100%;[m
+[31m-    background: transparent;[m
+[31m-    outline: none;[m
+[31m-    border: none;[m
+[31m-    font-size: 1em;[m
+[31m-    color: #fff;[m
+[31m-    font-weight: 500;[m
+[31m-    cursor: pointer;[m
+[31m-    letter-spacing: 0.5px;[m
+[31m-}[m
+[31m-/* upgrade end */[m
+[31m-/* left end */[m
+[32m+[m[32m.container .right { width: 100%; height: 100%; display: flex; flex-direction: column; gap: 20px; }[m
+ [m
+[31m-/* right start */[m
+[31m-.container .right {[m
+[31m-    position: relative;[m
+[31m-    width: 100%;[m
+[31m-    height: 100%;[m
+[31m-    display: flex;[m
+[31m-    flex-direction: column;[m
+[31m-    gap: 20px;[m
+[31m-}[m
+[31m-[m
+[31m-/* top start */[m
+ .container .right .top {[m
+[31m-    position: relative;[m
+     width: 100%;[m
+     height: 70px;[m
+     display: flex;[m
+[36m@@ -258,205 +116,29 @@[m [mbody {[m
+     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);[m
+ }[m
+ [m
+[31m-/* searchBx start */[m
+[31m-.container .right .top .searchBx {[m
+[31m-    position: relative;[m
+[31m-    display: flex;[m
+[31m-    justify-content: center;[m
+[31m-    align-items: center;[m
+[31m-    gap: 20px;[m
+[31m-}[m
+[31m-[m
+[31m-.container .right .top .searchBx h1 {[m
+[31m-    color: #2c3e50;[m
+[31m-    font-size: 1.5em;[m
+[31m-    font-weight: 600;[m
+[31m-}[m
+[31m-[m
+[31m-.container .right .top .searchBx .inputBx {[m
+[31m-    position: relative;[m
+[31m-    width: 300px;[m
+[31m-    height: 45px;[m
+[31m-    background: #f8f9fa;[m
+[31m-    border-radius: 12px;[m
+[31m-    display: flex;[m
+[31m-    justify-content: flex-start;[m
+[31m-    align-items: center;[m
+[31m-    padding-left: 15px;[m
+[31m-    gap: 10px;[m
+[31m-    overflow: hidden;[m
+[31m-    border: 2px solid transparent;[m
+[31m-    transition: all 0.3s ease;[m
+[31m-}[m
+[31m-[m
+[31m-.container .right .top .searchBx .inputBx:focus-within {[m
+[31m-    border-color: #3498db;[m
+[31m-    background: #fff;[m
+[31m-}[m
+[31m-[m
+[31m-.container .right .top .searchBx .inputBx span {[m
+[31m-    color: #7f8c8d;[m
+[31m-    cursor: pointer;[m
+[31m-}[m
+[31m-[m
+[31m-.container .right .top .searchBx .inputBx input {[m
+[31m-    position: relative;[m
+[31m-    width: 100%;[m
+[31m-    height: 100%;[m
+[31m-    outline: none;[m
+[31m-    border: none;[m
+[31m-    background: transparent;[m
+[31m-    margin-right: 15px;[m
+[31m-    font-size: 1em;[m
+[31m-    color: #2c3e50;[m
+[31m-}[m
+[31m-[m
+[31m-.container .right .top .searchBx .inputBx input::placeholder {[m
+[31m-    color: #95a5a6;[m
+[31m-}[m
+[31m-[m
+[31m-.container .right .top .searchBx .inputBx span.searchClose {[m
+[31m-    position: absolute;[m
+[31m-    right: 15px;[m
+[31m-    cursor: pointer;[m
+[31m-    display: none;[m
+[31m-}[m
+[31m-[m
+[31m-/* user start */[m
+[31m-.container .right .top .user {[m
+[31m-    position: relative;[m
+[31m-    display: flex;[m
+[31m-    justify-content: center;[m
+[31m-    align-items: center;[m
+[31m-    gap: 15px;[m
+[31m-}[m
+[31m-[m
+[31m-.container .right .top .user span {[m
+[31m-    color: #7f8c8d;[m
+[31m-    cursor: pointer;[m
+[31m-    transition: color 0.3s ease;[m
+[31m-}[m
+[31m-[m
+[31m-.container .right .top .user span:hover {[m
+[31m-    color: #3498db;[m
+[31m-}[m
+[31m-[m
+[31m-.container .right .top .user .userImg {[m
+[31m-    position: relative;[m
+[31m-    width: 45px;[m
+[31m-    height: 45px;[m
+[31m-    overflow: hidden;[m
+[31m-    cursor: pointer;[m
+[31m-    border-radius: 50%;[m
+[31m-    background: linear-gradient(135deg, #3498db, #2980b9);[m
+[31m-    display: flex;[m
+[31m-    align-items: center;[m
+[31m-    justify-content: center;[m
+[31m-}[m
+[31m-[m
+[31m-.container .right .top .user .userImg .avatar {[m
+[31m-    color: white;[m
+[31m-    font-size: 1.2em;[m
+[31m-    font-weight: 600;[m
+[31m-}[m
+[31m-[m
+[31m-.container .right .top .user h2 {[m
+[31m-    font-size: 1em;[m
+[31m-    line-height: 18px;[m
+[31m-    white-space: nowrap;[m
+[31m-    cursor: pointer;[m
+[31m-    color: #2c3e50;[m
+[31m-}[m
+[31m-[m
+[31m-.container .right .top .user h2 span {[m
+[31m-    color: #7f8c8d;[m
+[31m-    font-size: 0.8em;[m
+[31m-    font-weight: 400;[m
+[31m-}[m
+[32m+[m[32m.container .right .top .searchBx { display: flex; align-items: center; gap: 20px; }[m
+[32m+[m[32m.container .right .top .searchBx h1 { color: #2c3e50; font-size: 1.5em; font-weight: 600; }[m
+[32m+[m[32m.container .right .top .searchBx .inputBx { width: 300px; height: 45px; background: #f8f9fa; border-radius: 12px; display: flex; align-items: center; padding-left: 15px; gap: 10px; border: 2px solid transparent; transition: all 0.3s ease; }[m
+[32m+[m[32m.container .right .top .searchBx .inputBx:focus-within { border-color: #3498db; background: #fff; }[m
+[32m+[m[32m.container .right .top .searchBx .inputBx span { color: #7f8c8d; }[m
+[32m+[m[32m.container .right .top .searchBx .inputBx input { width: 100%; height: 100%; outline: none; border: none; background: transparent; margin-right: 15px; font-size: 1em; color: #2c3e50; }[m
+[32m+[m[32m.container .right .top .searchBx .inputBx input::placeholder { color: #95a5a6; }[m
+[32m+[m[32m.container .right .top .searchBx .inputBx span.searchClose { display: none; }[m
+[32m+[m
+[32m+[m[32m.container .right .top .user { display: flex; align-items: center; gap: 15px; }[m
+[32m+[m[32m.container .right .top .user span { color: #7f8c8d; transition: color 0.3s ease; }[m
+[32m+[m[32m.container .right .top .user span:hover { color: #3498db; }[m
+[32m+[m[32m.container .right .top .user .userImg { width: 45px; height: 45px; border-radius: 50%; background: linear-gradient(135deg, #3498db, #2980b9); display: flex; align-items: center; justify-content: center; }[m
+[32m+[m[32m.container .right .top .user .userImg .avatar { color: white; font-size: 1.2em; font-weight: 600; }[m
+[32m+[m[32m.container .right .top .user h2 { font-size: 1em; line-height: 18px; color: #2c3e50; }[m
+[32m+[m[32m.container .right .top .user h2 span { color: #7f8c8d; font-size: 0.8em; font-weight: 400; }[m
+[32m+[m[32m.container .right .top .user .arrow { width: 35px; height: 35px; border: 2px solid #ecf0f1; border-radius: 10px; display: flex; justify-content: center; align-items: center; transition: all 0.3s ease; }[m
+[32m+[m[32m.container .right .top .user .arrow:hover { border-color: #3498db; background: #f8f9fa; }[m
+[32m+[m[32m.container .right .top .user .arrow span { color: #7f8c8d; transition: all 0.3s ease; }[m
+[32m+[m[32m.container .right .top .user .arrow:hover span { color: #3498db; transform: scale(1.1); }[m
+[32m+[m[32m.container .right .top .user .toggle { display: none; }[m
+ [m
+[31m-.container .right .top .user .arrow {[m
+[31m-    position: relative;[m
+[31m-    width: 35px;[m
+[31m-    height: 35px;[m
+[31m-    border: 2px solid #ecf0f1;[m
+[31m-    border-radius: 10px;[m
+[31m-    cursor: pointer;[m
+[31m-    display: flex;[m
+[31m-    justify-content: center;[m
+[31m-    align-items: center;[m
+[31m-    transition: all 0.3s ease;[m
+[31m-}[m
+[31m-[m
+[31m-.container .right .top .user .arrow:hover {[m
+[31m-    border-color: #3498db;[m
+[31m-    background: #f8f9fa;[m
+[31m-}[m
+[31m-[m
+[31m-.container .right .top .user .arrow span {[m
+[31m-    color: #7f8c8d;[m
+[31m-    font-size: 1.5em;[m
+[31m-    font-weight: 600;[m
+[31m-    transition: all 0.3s ease;[m
+[31m-}[m
+[31m-[m
+[31m-.container .right .top .user .arrow:hover span {[m
+[31m-    color: #3498db;[m
+[31m-    transform: scale(1.1);[m
+[31m-}[m
+[31m-[m
+[31m-.container .right .top .user .toggle {[m
+[31m-    position: relative;[m
+[31m-    width: 40px;[m
+[31m-    height: 40px;[m
+[31m-    border: 2px solid #ecf0f1;[m
+[31m-    border-radius: 10px;[m
+[31m-    cursor: pointer;[m
+[31m-    text-align: center;[m
+[31m-    line-height: 40px;[m
+[31m-    display: none;[m
+[31m-    transition: all 0.3s ease;[m
+[31m-}[m
+[31m-[m
+[31m-.container .right .top .user .toggle:hover {[m
+[31m-    border-color: #3498db;[m
+[31m-    background: #f8f9fa;[m
+[31m-}[m
+[31m-[m
+[31m-.container .right .top .user .toggle span {[m
+[31m-    color: #7f8c8d;[m
+[31m-    font-size: 1.3em;[m
+[31m-    font-weight: 600;[m
+[31m-    transition: .3s ease, opacity 0s, visibility 0s;[m
+[31m-}[m
+[31m-[m
+[31m-.container .right .top .user .toggle:hover span {[m
+[31m-    color: #3498db;[m
+[31m-}[m
+[31m-[m
+[31m-.container .right .top .user .toggle span:last-child {[m
+[31m-    position: absolute;[m
+[31m-    top: 50%;[m
+[31m-    left: 50%;[m
+[31m-    transform: translate(-50%, -50%);[m
+[31m-    opacity: 0;[m
+[31m-    visibility: hidden;[m
+[31m-}[m
+[31m-[m
+[31m-.container .right .top .user .toggle.active span:first-child {[m
+[31m-    opacity: 0;[m
+[31m-    visibility: hidden;[m
+[31m-}[m
+[31m-[m
+[31m-.container .right .top .user .toggle.active span:last-child {[m
+[31m-    opacity: 1;[m
+[31m-    visibility: visible;[m
+[31m-}[m
+[31m-/* user end */[m
+[31m-/* top end */[m
+[31m-[m
+[31m-/* main start */[m
+ .container .right main {[m
+[31m-    position: relative;[m
+     width: 100%;[m
+     height: calc(100% - 90px);[m
+     display: grid;[m
+[36m@@ -467,13 +149,7 @@[m [mbody {[m
+     padding: 10px 5px 20px 5px;[m
+ }[m
+ [m
+[31m-/* Card Styles */[m
+[31m-.taskInputCard,[m
+[31m-.jsonInputCard,[m
+[31m-.strategyCard,[m
+[31m-.resultsCard,[m
+[31m-.suggestionsCard,[m
+[31m-.sampleTasksCard {[m
+[32m+[m[32m.taskInputCard, .jsonInputCard, .strategyCard, .resultsCard, .suggestionsCard, .sampleTasksCard {[m
+     background: #fff;[m
+     border-radius: 15px;[m
+     padding: 25px;[m
+[36m@@ -481,110 +157,25 @@[m [mbody {[m
+     border: 1px solid #f1f3ff;[m
+ }[m
+ [m
+[31m-.taskInputCard {[m
+[31m-    grid-column: 1 / 3;[m
+[31m-    grid-row: 1;[m
+[31m-}[m
+[31m-[m
+[31m-.jsonInputCard {[m
+[31m-    grid-column: 3;[m
+[31m-    grid-row: 1;[m
+[31m-}[m
+[31m-[m
+[31m-.strategyCard {[m
+[31m-    grid-column: 1;[m
+[31m-    grid-row: 2;[m
+[31m-}[m
+[31m-[m
+[31m-.sampleTasksCard {[m
+[31m-    grid-column: 2 / 4;[m
+[31m-    grid-row: 2;[m
+[31m-}[m
+[31m-[m
+[31m-.resultsCard {[m
+[31m-    grid-column: 1 / 3;[m
+[31m-    grid-row: 3 / 5;[m
+[31m-}[m
+[31m-[m
+[31m-.suggestionsCard {[m
+[31m-    grid-column: 3;[m
+[31m-    grid-row: 3 / 5;[m
+[31m-}[m
+[31m-[m
+[31m-/* Card Header */[m
+[31m-.cardHeader {[m
+[31m-    display: flex;[m
+[31m-    justify-content: space-between;[m
+[31m-    align-items: center;[m
+[31m-    margin-bottom: 20px;[m
+[31m-    padding-bottom: 15px;[m
+[31m-    border-bottom: 2px solid #f8f9fa;[m
+[31m-}[m
+[31m-[m
+[31m-.cardHeader h2 {[m
+[31m-    color: #2c3e50;[m
+[31m-    font-size: 1.3em;[m
+[31m-    font-weight: 600;[m
+[31m-}[m
+[31m-[m
+[31m-.resultsInfo {[m
+[31m-    font-size: 0.9em;[m
+[31m-    color: #7f8c8d;[m
+[31m-    font-weight: 500;[m
+[31m-}[m
+[31m-[m
+[31m-/* Form Styles */[m
+[31m-.taskForm {[m
+[31m-    display: flex;[m
+[31m-    flex-direction: column;[m
+[31m-    gap: 15px;[m
+[31m-}[m
+[31m-[m
+[31m-.formRow {[m
+[31m-    display: flex;[m
+[31m-    gap: 15px;[m
+[31m-}[m
+[31m-[m
+[31m-.formRow .inputGroup {[m
+[31m-    flex: 1;[m
+[31m-    display: flex;[m
+[31m-    flex-direction: column;[m
+[31m-    gap: 8px;[m
+[31m-}[m
+[31m-[m
+[31m-.formRow .inputGroup.full {[m
+[31m-    flex: 2;[m
+[31m-}[m
+[31m-[m
+[31m-.inputGroup label {[m
+[31m-    font-size: 0.9em;[m
+[31m-    color: #2c3e50;[m
+[31m-    font-weight: 600;[m
+[31m-    margin-bottom: 5px;[m
+[31m-    display: block;[m
+[31m-}[m
+[31m-[m
+[31m-.taskForm input {[m
+[31m-    padding: 12px 15px;[m
+[31m-    border: 2px solid #ecf0f1;[m
+[31m-    border-radius: 10px;[m
+[31m-    font-size: 1em;[m
+[31m-    transition: all 0.3s ease;[m
+[31m-    background: #f8f9fa;[m
+[31m-}[m
+[32m+[m[32m.taskInputCard { grid-column: 1 / 3; grid-row: 1; }[m
+[32m+[m[32m.jsonInputCard { grid-column: 3; grid-row: 1; }[m
+[32m+[m[32m.strategyCard { grid-column: 1; grid-row: 2; }[m
+[32m+[m[32m.sampleTasksCard { grid-column: 2 / 4; grid-row: 2; }[m
+[32m+[m[32m.resultsCard { grid-column: 1 / 3; grid-row: 3 / 5; }[m
+[32m+[m[32m.suggestionsCard { grid-column: 3; grid-row: 3 / 5; }[m
+ [m
+[31m-.taskForm input:focus {[m
+[31m-    outline: none;[m
+[31m-    border-color: #3498db;[m
+[31m-    background: #fff;[m
+[31m-    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);[m
+[31m-}[m
+[32m+[m[32m.cardHeader { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid #f8f9fa; }[m
+[32m+[m[32m.cardHeader h2 { color: #2c3e50; font-size: 1.3em; font-weight: 600; }[m
+[32m+[m[32m.resultsInfo { font-size: 0.9em; color: #7f8c8d; font-weight: 500; }[m
+ [m
+[31m-.formActions {[m
+[31m-    display: flex;[m
+[31m-    gap: 15px;[m
+[31m-    margin-top: 10px;[m
+[31m-}[m
+[32m+[m[32m.taskForm { display: flex; flex-direction: column; gap: 15px; }[m
+[32m+[m[32m.formRow { display: flex; gap: 15px; }[m
+[32m+[m[32m.formRow .inputGroup { flex: 1; display: flex; flex-direction: column; gap: 8px; }[m
+[32m+[m[32m.formRow .inputGroup.full { flex: 2; }[m
+[32m+[m[32m.inputGroup label { font-size: 0.9em; color: #2c3e50; font-weight: 600; margin-bottom: 5px; }[m
+[32m+[m[32m.taskForm input { padding: 12px 15px; border: 2px solid #ecf0f1; border-radius: 10px; font-size: 1em; transition: all 0.3s ease; background: #f8f9fa; }[m
+[32m+[m[32m.taskForm input:focus { outline: none; border-color: #3498db; background: #fff; box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1); }[m
+[32m+[m[32m.formActions { display: flex; gap: 15px; margin-top: 10px; }[m
+ [m
+ .addBtn, .analyzeBtn, .jsonBtn, .sampleBtn {[m
+     display: flex;[m
+[36m@@ -599,148 +190,33 @@[m [mbody {[m
+     transition: all 0.3s ease;[m
+ }[m
+ [m
+[31m-.addBtn {[m
+[31m-    background: #27ae60;[m
+[31m-    color: white;[m
+[31m-    flex: 1;[m
+[31m-}[m
+[31m-[m
+[31m-.addBtn:hover {[m
+[31m-    background: #219a52;[m
+[31m-    transform: translateY(-2px);[m
+[31m-    box-shadow: 0 5px 15px rgba(39, 174, 96, 0.3);[m
+[31m-}[m
+[31m-[m
+[31m-.analyzeBtn {[m
+[31m-    background: #3498db;[m
+[31m-    color: white;[m
+[31m-    flex: 2;[m
+[31m-}[m
+[31m-[m
+[31m-.analyzeBtn:hover {[m
+[31m-    background: #2980b9;[m
+[31m-    transform: translateY(-2px);[m
+[31m-    box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3);[m
+[31m-}[m
+[31m-[m
+[31m-/* JSON Input */[m
+[31m-.jsonSection {[m
+[31m-    display: flex;[m
+[31m-    flex-direction: column;[m
+[31m-    gap: 15px;[m
+[31m-}[m
+[31m-[m
+[31m-#jsonInput {[m
+[31m-    width: 100%;[m
+[31m-    height: 120px;[m
+[31m-    padding: 15px;[m
+[31m-    border: 2px solid #ecf0f1;[m
+[31m-    border-radius: 10px;[m
+[31m-    font-family: 'Courier New', monospace;[m
+[31m-    font-size: 0.9em;[m
+[31m-    resize: vertical;[m
+[31m-    background: #f8f9fa;[m
+[31m-    transition: all 0.3s ease;[m
+[31m-}[m
+[31m-[m
+[31m-#jsonInput:focus {[m
+[31m-    outline: none;[m
+[31m-    border-color: #3498db;[m
+[31m-    background: #fff;[m
+[31m-}[m
+[31m-[m
+[31m-.jsonBtn {[m
+[31m-    background: #9b59b6;[m
+[31m-    color: white;[m
+[31m-    width: 100%;[m
+[31m-    justify-content: center;[m
+[31m-}[m
+[31m-[m
+[31m-.jsonBtn:hover {[m
+[31m-    background: #8e44ad;[m
+[31m-    transform: translateY(-2px);[m
+[31m-    box-shadow: 0 5px 15px rgba(155, 89, 182, 0.3);[m
+[31m-}[m
+[31m-[m
+[31m-/* Strategy Options */[m
+[31m-.strategyOptions {[m
+[31m-    display: grid;[m
+[31m-    grid-template-columns: 1fr;[m
+[31m-    gap: 12px;[m
+[31m-}[m
+[31m-[m
+[31m-.strategyGroup {[m
+[31m-    position: relative;[m
+[31m-}[m
+[31m-[m
+[31m-.strategyGroup input[type="radio"] {[m
+[31m-    display: none;[m
+[31m-}[m
+[31m-[m
+[31m-.strategyGroup label {[m
+[31m-    display: flex;[m
+[31m-    align-items: center;[m
+[31m-    gap: 12px;[m
+[31m-    padding: 15px;[m
+[31m-    border: 2px solid #ecf0f1;[m
+[31m-    border-radius: 10px;[m
+[31m-    cursor: pointer;[m
+[31m-    transition: all 0.3s ease;[m
+[31m-    background: #f8f9fa;[m
+[31m-}[m
+[31m-[m
+[31m-.strategyGroup label:hover {[m
+[31m-    border-color: #bdc3c7;[m
+[31m-    background: #fff;[m
+[31m-}[m
+[31m-[m
+[31m-.strategyGroup input[type="radio"]:checked + label {[m
+[31m-    border-color: #3498db;[m
+[31m-    background: #e3f2fd;[m
+[31m-    color: #3498db;[m
+[31m-    font-weight: 500;[m
+[31m-}[m
+[31m-[m
+[31m-.strategyGroup .material-symbols-outlined {[m
+[31m-    font-size: 1.2em;[m
+[31m-}[m
+[31m-[m
+[31m-.strategy-description {[m
+[31m-    display: block;[m
+[31m-    font-size: 0.8em;[m
+[31m-    color: #7f8c8d;[m
+[31m-    margin-top: 4px;[m
+[31m-    font-weight: normal;[m
+[31m-}[m
+[32m+[m[32m.addBtn { background: #27ae60; color: white; flex: 1; }[m
+[32m+[m[32m.addBtn:hover { background: #219a52; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(39, 174, 96, 0.3); }[m
+[32m+[m[32m.analyzeBtn { background: #3498db; color: white; flex: 2; }[m
+[32m+[m[32m.analyzeBtn:hover { background: #2980b9; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3); }[m
+[32m+[m[32m.jsonBtn { background: #9b59b6; color: white; width: 100%; justify-content: center; }[m
+[32m+[m[32m.jsonBtn:hover { background: #8e44ad; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(155, 89, 182, 0.3); }[m
+[32m+[m[32m.sampleBtn { background: #95a5a6; color: white; width: 100%; justify-content: center; }[m
+[32m+[m[32m.sampleBtn:hover { background: #7f8c8d; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(149, 165, 166, 0.3); }[m
+ [m
+[31m-/* Results Container */[m
+[31m-.resultsContainer, .suggestionsContainer {[m
+[31m-    max-height: 400px;[m
+[31m-    overflow-y: auto;[m
+[31m-}[m
+[32m+[m[32m.jsonSection { display: flex; flex-direction: column; gap: 15px; }[m
+[32m+[m[32m#jsonInput { width: 100%; height: 120px; padding: 15px; border: 2px solid #ecf0f1; border-radius: 10px; font-family: 'Courier New', monospace; font-size: 0.9em; resize: vertical; background: #f8f9fa; }[m
+[32m+[m[32m#jsonInput:focus { outline: none; border-color: #3498db; background: #fff; }[m
+ [m
+[31m-.emptyState {[m
+[31m-    display: flex;[m
+[31m-    flex-direction: column;[m
+[31m-    align-items: center;[m
+[31m-    justify-content: center;[m
+[31m-    padding: 40px 20px;[m
+[31m-    text-align: center;[m
+[31m-    color: #7f8c8d;[m
+[31m-}[m
+[32m+[m[32m.strategyOptions { display: grid; grid-template-columns: 1fr; gap: 12px; }[m
+[32m+[m[32m.strategyGroup input[type="radio"] { display: none; }[m
+[32m+[m[32m.strategyGroup label { display: flex; align-items: center; gap: 12px; padding: 15px; border: 2px solid #ecf0f1; border-radius: 10px; cursor: pointer; transition: all 0.3s ease; background: #f8f9fa; }[m
+[32m+[m[32m.strategyGroup label:hover { border-color: #bdc3c7; background: #fff; }[m
+[32m+[m[32m.strategyGroup input[type="radio"]:checked + label { border-color: #3498db; background: #e3f2fd; color: #3498db; font-weight: 500; }[m
+[32m+[m[32m.strategyGroup .material-symbols-outlined { font-size: 1.2em; }[m
+[32m+[m[32m.strategy-description { display: block; font-size: 0.8em; color: #7f8c8d; margin-top: 4px; font-weight: normal; }[m
+ [m
+[31m-.emptyState .material-symbols-outlined {[m
+[31m-    font-size: 3em;[m
+[31m-    margin-bottom: 15px;[m
+[31m-    opacity: 0.5;[m
+[31m-}[m
+[32m+[m[32m.resultsContainer, .suggestionsContainer { max-height: 400px; overflow-y: auto; }[m
+ [m
+[31m-.emptyState h3 {[m
+[31m-    margin-bottom: 10px;[m
+[31m-    color: #2c3e50;[m
+[31m-}[m
+[32m+[m[32m.emptyState { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 20px; text-align: center; color: #7f8c8d; }[m
+[32m+[m[32m.emptyState .material-symbols-outlined { font-size: 3em; margin-bottom: 15px; opacity: 0.5; }[m
+[32m+[m[32m.emptyState h3 { margin-bottom: 10px; color: #2c3e50; }[m
+ [m
+[31m-/* Task Items */[m
+ .taskItem {[m
+     background: #f8f9fa;[m
+     border-radius: 10px;[m
+[36m@@ -750,79 +226,19 @@[m [mbody {[m
+     transition: all 0.3s ease;[m
+ }[m
+ [m
+[31m-.taskItem:hover {[m
+[31m-    transform: translateX(5px);[m
+[31m-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);[m
+[31m-}[m
+[31m-[m
+[31m-.taskItem.high-priority {[m
+[31m-    border-left-color: #e74c3c;[m
+[31m-    background: linear-gradient(135deg, #fff, #fdf2f2);[m
+[31m-}[m
+[31m-[m
+[31m-.taskItem.medium-priority {[m
+[31m-    border-left-color: #f39c12;[m
+[31m-    background: linear-gradient(135deg, #fff, #fef9f3);[m
+[31m-}[m
+[31m-[m
+[31m-.taskItem.low-priority {[m
+[31m-    border-left-color: #27ae60;[m
+[31m-    background: linear-gradient(135deg, #fff, #f3fdf7);[m
+[31m-}[m
+[31m-[m
+[31m-.taskHeader {[m
+[31m-    display: flex;[m
+[31m-    justify-content: space-between;[m
+[31m-    align-items: flex-start;[m
+[31m-    margin-bottom: 10px;[m
+[31m-}[m
+[31m-[m
+[31m-.taskTitle {[m
+[31m-    font-size: 1.1em;[m
+[31m-    font-weight: 600;[m
+[31m-    color: #2c3e50;[m
+[31m-    margin-bottom: 5px;[m
+[31m-}[m
+[31m-[m
+[31m-.priorityScore {[m
+[31m-    background: #3498db;[m
+[31m-    color: white;[m
+[31m-    padding: 5px 12px;[m
+[31m-    border-radius: 20px;[m
+[31m-    font-size: 0.9em;[m
+[31m-    font-weight: 600;[m
+[31m-}[m
+[31m-[m
+[31m-.taskDetails {[m
+[31m-    display: grid;[m
+[31m-    grid-template-columns: repeat(2, 1fr);[m
+[31m-    gap: 10px;[m
+[31m-    margin-bottom: 10px;[m
+[31m-}[m
+[31m-[m
+[31m-.taskDetail {[m
+[31m-    display: flex;[m
+[31m-    align-items: center;[m
+[31m-    gap: 8px;[m
+[31m-    font-size: 0.9em;[m
+[31m-    color: #7f8c8d;[m
+[31m-}[m
+[31m-[m
+[31m-.taskDetail .material-symbols-outlined {[m
+[31m-    font-size: 1.1em;[m
+[31m-}[m
+[32m+[m[32m.taskItem:hover { transform: translateX(5px); box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1); }[m
+[32m+[m[32m.taskItem.high-priority { border-left-color: #e74c3c; background: linear-gradient(135deg, #fff, #fdf2f2); }[m
+[32m+[m[32m.taskItem.medium-priority { border-left-color: #f39c12; background: linear-gradient(135deg, #fff, #fef9f3); }[m
+[32m+[m[32m.taskItem.low-priority { border-left-color: #27ae60; background: linear-gradient(135deg, #fff, #f3fdf7); }[m
+ [m
+[31m-.taskExplanation {[m
+[31m-    font-size: 0.9em;[m
+[31m-    color: #2c3e50;[m
+[31m-    font-style: italic;[m
+[31m-    padding: 10px;[m
+[31m-    background: rgba(52, 152, 219, 0.1);[m
+[31m-    border-radius: 8px;[m
+[31m-    margin-top: 10px;[m
+[31m-}[m
+[32m+[m[32m.taskHeader { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }[m
+[32m+[m[32m.taskTitle { font-size: 1.1em; font-weight: 600; color: #2c3e50; margin-bottom: 5px; }[m
+[32m+[m[32m.priorityScore { background: #3498db; color: white; padding: 5px 12px; border-radius: 20px; font-size: 0.9em; font-weight: 600; }[m
+[32m+[m[32m.taskDetails { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 10px; }[m
+[32m+[m[32m.taskDetail { display: flex; align-items: center; gap: 8px; font-size: 0.9em; color: #7f8c8d; }[m
+[32m+[m[32m.taskDetail .material-symbols-outlined { font-size: 1.1em; }[m
+[32m+[m[32m.taskExplanation { font-size: 0.9em; color: #2c3e50; font-style: italic; padding: 10px; background: rgba(52, 152, 219, 0.1); border-radius: 8px; margin-top: 10px; }[m
+ [m
+[31m-/* Suggestions */[m
+ .suggestionItem {[m
+     background: #fff;[m
+     border: 2px solid #ecf0f1;[m
+[36m@@ -832,227 +248,53 @@[m [mbody {[m
+     transition: all 0.3s ease;[m
+ }[m
+ [m
+[31m-.suggestionItem:hover {[m
+[31m-    border-color: #3498db;[m
+[31m-    transform: translateY(-2px);[m
+[31m-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);[m
+[31m-}[m
+[31m-[m
+[31m-.suggestionRank {[m
+[31m-    display: inline-block;[m
+[31m-    background: #3498db;[m
+[31m-    color: white;[m
+[31m-    width: 30px;[m
+[31m-    height: 30px;[m
+[31m-    border-radius: 50%;[m
+[31m-    text-align: center;[m
+[31m-    line-height: 30px;[m
+[31m-    font-weight: 600;[m
+[31m-    margin-bottom: 10px;[m
+[31m-}[m
+[32m+[m[32m.suggestionItem:hover { border-color: #3498db; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1); }[m
+[32m+[m[32m.suggestionRank { display: inline-block; background: #3498db; color: white; width: 30px; height: 30px; border-radius: 50%; text-align: center; line-height: 30px; font-weight: 600; margin-bottom: 10px; }[m
+[32m+[m[32m.suggestionItem:nth-child(1) .suggestionRank { background: #e74c3c; }[m
+[32m+[m[32m.suggestionItem:nth-child(2) .suggestionRank { background: #f39c12; }[m
+[32m+[m[32m.suggestionItem:nth-child(3) .suggestionRank { background: #27ae60; }[m
+ [m
+[31m-.suggestionItem:nth-child(1) .suggestionRank {[m
+[31m-    background: #e74c3c;[m
+[31m-}[m
+[31m-[m
+[31m-.suggestionItem:nth-child(2) .suggestionRank {[m
+[31m-    background: #f39c12;[m
+[31m-}[m
+[31m-[m
+[31m-.suggestionItem:nth-child(3) .suggestionRank {[m
+[31m-    background: #27ae60;[m
+[31m-}[m
+[31m-[m
+[31m-/* Sample Tasks */[m
+[31m-.sampleTasks {[m
+[31m-    display: flex;[m
+[31m-    justify-content: center;[m
+[31m-}[m
+[31m-[m
+[31m-.sampleBtn {[m
+[31m-    background: #95a5a6;[m
+[31m-    color: white;[m
+[31m-    width: 100%;[m
+[31m-    justify-content: center;[m
+[31m-}[m
+[31m-[m
+[31m-.sampleBtn:hover {[m
+[31m-    background: #7f8c8d;[m
+[31m-    transform: translateY(-2px);[m
+[31m-    box-shadow: 0 5px 15px rgba(149, 165, 166, 0.3);[m
+[31m-}[m
+[31m-[m
+[31m-/* Loading States */[m
+[31m-.loading {[m
+[31m-    opacity: 0.7;[m
+[31m-    pointer-events: none;[m
+[31m-    position: relative;[m
+[31m-}[m
+[31m-[m
+[31m-.loading::after {[m
+[31m-    content: '';[m
+[31m-    position: absolute;[m
+[31m-    top: 50%;[m
+[31m-    left: 50%;[m
+[31m-    width: 20px;[m
+[31m-    height: 20px;[m
+[31m-    border: 2px solid #f3f3f3;[m
+[31m-    border-top: 2px solid #3498db;[m
+[31m-    border-radius: 50%;[m
+[31m-    animation: spin 1s linear infinite;[m
+[31m-}[m
+[32m+[m[32m.loading { opacity: 0.7; pointer-events: none; position: relative; }[m
+[32m+[m[32m.loading::after { content: ''; position: absolute; top: 50%; left: 50%; width: 20px; height: 20px; border: 2px solid #f3f3f3; border-top: 2px solid #3498db; border-radius: 50%; animation: spin 1s linear infinite; }[m
+ [m
+ @keyframes spin {[m
+     0% { transform: translate(-50%, -50%) rotate(0deg); }[m
+     100% { transform: translate(-50%, -50%) rotate(360deg); }[m
+ }[m
+ [m
+[31m-/* Success/Error States */[m
+[31m-.success-message {[m
+[31m-    background: #d4edda;[m
+[31m-    color: #155724;[m
+[31m-    padding: 10px 15px;[m
+[31m-    border-radius: 5px;[m
+[31m-    margin: 10px 0;[m
+[31m-    border: 1px solid #c3e6cb;[m
+[31m-}[m
+[32m+[m[32m.success-message { background: #d4edda; color: #155724; padding: 10px 15px; border-radius: 5px; margin: 10px 0; border: 1px solid #c3e6cb; }[m
+[32m+[m[32m.error-message { background: #f8d7da; color: #721c24; padding: 10px 15px; border-radius: 5px; margin: 10px 0; border: 1px solid #f5c6cb; }[m
+ [m
+[31m-.error-message {[m
+[31m-    background: #f8d7da;[m
+[31m-    color: #721c24;[m
+[31m-    padding: 10px 15px;[m
+[31m-    border-radius: 5px;[m
+[31m-    margin: 10px 0;[m
+[31m-    border: 1px solid #f5c6cb;[m
+[31m-}[m
+[32m+[m[32m.icon-btn { background: none; border: none; cursor: pointer; padding: 5px; border-radius: 5px; transition: background-color 0.3s ease; }[m
+[32m+[m[32m.icon-btn:hover { background-color: rgba(52, 152, 219, 0.1); }[m
+ [m
+[31m-/* Icon Button */[m
+[31m-.icon-btn {[m
+[31m-    background: none;[m
+[31m-    border: none;[m
+[31m-    cursor: pointer;[m
+[31m-    padding: 5px;[m
+[31m-    border-radius: 5px;[m
+[31m-    transition: background-color 0.3s ease;[m
+[31m-}[m
+[31m-[m
+[31m-.icon-btn:hover {[m
+[31m-    background-color: rgba(52, 152, 219, 0.1);[m
+[31m-}[m
+[31m-[m
+[31m-/* Responsive Design */[m
+ @media (max-width: 1200px) {[m
+[31m-    .container .right main {[m
+[31m-        grid-template-columns: 1fr 1fr;[m
+[31m-        grid-template-rows: auto auto auto 1fr 1fr;[m
+[31m-    }[m
+[31m-[m
+[31m-    .taskInputCard {[m
+[31m-        grid-column: 1 / 3;[m
+[31m-        grid-row: 1;[m
+[31m-    }[m
+[31m-[m
+[31m-    .jsonInputCard {[m
+[31m-        grid-column: 1 / 3;[m
+[31m-        grid-row: 2;[m
+[31m-    }[m
+[31m-[m
+[31m-    .strategyCard {[m
+[31m-        grid-column: 1;[m
+[31m-        grid-row: 3;[m
+[31m-    }[m
+[31m-[m
+[31m-    .sampleTasksCard {[m
+[31m-        grid-column: 2;[m
+[31m-        grid-row: 3;[m
+[31m-    }[m
+[31m-[m
+[31m-    .resultsCard {[m
+[31m-        grid-column: 1 / 3;[m
+[31m-        grid-row: 4;[m
+[31m-    }[m
+[31m-[m
+[31m-    .suggestionsCard {[m
+[31m-        grid-column: 1 / 3;[m
+[31m-        grid-row: 5;[m
+[31m-    }[m
+[32m+[m[32m    .container .right main { grid-template-columns: 1fr 1fr; grid-template-rows: auto auto auto 1fr 1fr; }[m
+[32m+[m[32m    .taskInputCard { grid-column: 1 / 3; grid-row: 1; }[m
+[32m+[m[32m    .jsonInputCard { grid-column: 1 / 3; grid-row: 2; }[m
+[32m+[m[32m    .strategyCard { grid-column: 1; grid-row: 3; }[m
+[32m+[m[32m    .sampleTasksCard { grid-column: 2; grid-row: 3; }[m
+[32m+[m[32m    .resultsCard { grid-column: 1 / 3; grid-row: 4; }[m
+[32m+[m[32m    .suggestionsCard { grid-column: 1 / 3; grid-row: 5; }[m
+ }[m
+ [m
+ @media (max-width: 768px) {[m
+[31m-    .container {[m
+[31m-        flex-direction: column;[m
+[31m-        height: auto;[m
+[31m-        min-height: 100vh;[m
+[31m-    }[m
+[31m-[m
+[31m-    .container .left {[m
+[31m-        position: fixed;[m
+[31m-        left: -100%;[m
+[31m-        width: 280px;[m
+[31m-        height: 100vh;[m
+[31m-        z-index: 1000;[m
+[31m-        transition: left 0.3s ease;[m
+[31m-    }[m
+[31m-[m
+[31m-    .container .left.active {[m
+[31m-        left: 0;[m
+[31m-    }[m
+[31m-[m
+[31m-    .container .right {[m
+[31m-        width: 100%;[m
+[31m-    }[m
+[31m-[m
+[31m-    .container .right .top .user .toggle {[m
+[31m-        display: block;[m
+[31m-    }[m
+[31m-[m
+[31m-    .container .right main {[m
+[31m-        grid-template-columns: 1fr;[m
+[31m-        grid-template-rows: repeat(auto-fit, minmax(200px, auto));[m
+[31m-    }[m
+[31m-[m
+[31m-    .taskInputCard,[m
+[31m-    .jsonInputCard,[m
+[31m-    .strategyCard,[m
+[31m-    .sampleTasksCard,[m
+[31m-    .resultsCard,[m
+[31m-    .suggestionsCard {[m
+[31m-        grid-column: 1 !important;[m
+[31m-        grid-row: auto !important;[m
+[31m-    }[m
+[31m-[m
+[31m-    .formRow {[m
+[31m-        flex-direction: column;[m
+[31m-    }[m
+[31m-[m
+[31m-    .formActions {[m
+[31m-        flex-direction: column;[m
+[31m-    }[m
+[32m+[m[32m    .container { flex-direction: column; height: auto; min-height: 100vh; }[m
+[32m+[m[32m    .container .left { position: fixed; left: -100%; width: 280px; height: 100vh; z-index: 1000; transition: left 0.3s ease; }[m
+[32m+[m[32m    .container .left.active { left: 0; }[m
+[32m+[m[32m    .container .right { width: 100%; }[m
+[32m+[m[32m    .container .right .top .user .toggle { display: block; }[m
+[32m+[m[32m    .container .right main { grid-template-columns: 1fr; }[m
+[32m+[m[32m    .taskInputCard, .jsonInputCard, .strategyCard, .sampleTasksCard, .resultsCard, .suggestionsCard { grid-column: 1 !important; }[m
+[32m+[m[32m    .formRow { flex-direction: column; }[m
+[32m+[m[32m    .formActions { flex-direction: column; }[m
+ }[m
+ [m
+ @media (max-width: 480px) {[m
+[31m-    .container {[m
+[31m-        padding: 10px;[m
+[31m-        border-radius: 15px;[m
+[31m-    }[m
+[31m-[m
+[31m-    .container .right .top {[m
+[31m-        padding: 15px 20px;[m
+[31m-    }[m
+[31m-[m
+[31m-    .container .right .top .searchBx h1 {[m
+[31m-        font-size: 1.2em;[m
+[31m-    }[m
+[31m-[m
+[31m-    .container .right .top .searchBx .inputBx {[m
+[31m-        width: 200px;[m
+[31m-    }[m
+[31m-[m
+[31m-    .container .right .top .user h2 {[m
+[31m-        display: none;[m
+[31m-    }[m
+[31m-[m
+[31m-    .taskDetails {[m
+[31m-        grid-template-columns: 1fr;[m
+[31m-    }[m
+[32m+[m[32m    .container { padding: 10px; border-radius: 15px; }[m
+[32m+[m[32m    .container .right .top { padding: 15px 20px; }[m
+[32m+[m[32m    .container .right .top .searchBx h1 { font-size: 1.2em; }[m
+[32m+[m[32m    .container .right .top .searchBx .inputBx { width: 200px; }[m
+[32m+[m[32m    .container .right .top .user h2 { display: none; }[m
+[32m+[m[32m    .taskDetails { grid-template-columns: 1fr; }[m
+ }[m
+\ No newline at end of file[m

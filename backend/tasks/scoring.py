@@ -1,4 +1,4 @@
-from datetime import date, timedelta
+from datetime import date
 
 class TaskScorer:
     def __init__(self, strategy="smart_balance"):
@@ -6,7 +6,6 @@ class TaskScorer:
         self.weights = self._get_weights(strategy)
     
     def _get_weights(self, strategy):
-        """Get weights based on the selected strategy"""
         weights = {
             "smart_balance": {"urgency": 0.4, "importance": 0.3, "effort": 0.2, "dependencies": 0.1},
             "fastest_wins": {"urgency": 0.2, "importance": 0.2, "effort": 0.5, "dependencies": 0.1},
@@ -16,39 +15,39 @@ class TaskScorer:
         return weights.get(strategy, weights["smart_balance"])
     
     def calculate_urgency_score(self, due_date, today=None):
-        """Calculate urgency score based on due date"""
         if today is None:
             today = date.today()
         
+        if not due_date:
+            return 0.5
+            
         try:
             due_date_obj = date.fromisoformat(due_date) if isinstance(due_date, str) else due_date
             days_until_due = (due_date_obj - today).days
             
             if days_until_due < 0:
-                return 1.0  # Overdue
+                return 1.0
             elif days_until_due == 0:
-                return 0.9  # Due today
+                return 0.9
             elif days_until_due <= 1:
-                return 0.8  # Tomorrow
+                return 0.8
             elif days_until_due <= 3:
-                return 0.6  # 2-3 days
+                return 0.6
             elif days_until_due <= 7:
-                return 0.4  # 4-7 days
+                return 0.4
             else:
-                return 0.2  # More than 7 days
+                return 0.2
         except (ValueError, TypeError):
-            return 0.5  # Default score for invalid dates
+            return 0.5
     
     def calculate_importance_score(self, importance):
-        """Normalize importance score (1-10 scale to 0-1)"""
         try:
             importance_val = int(importance)
             return max(0.1, min(1.0, importance_val / 10.0))
         except (ValueError, TypeError):
-            return 0.5  # Default score for invalid importance
+            return 0.5
     
     def calculate_effort_score(self, estimated_hours):
-        """Calculate effort score (lower effort = higher score)"""
         try:
             hours = float(estimated_hours)
             if hours <= 1:
@@ -60,19 +59,14 @@ class TaskScorer:
             else:
                 return 0.2
         except (ValueError, TypeError):
-            return 0.5  # Default score for invalid hours
+            return 0.5
     
     def calculate_dependency_score(self, dependencies, all_tasks):
-        """Calculate dependency score (tasks that block others get higher priority)"""
         if not dependencies or not isinstance(dependencies, list):
-            return 0.5  # Neutral score for no dependencies
+            return 0.5
         
         try:
-            # Check if this task blocks other tasks
-            task_index = all_tasks.index(all_tasks) if all_tasks else -1
-            if task_index == -1:
-                return 0.5
-            
+            task_index = all_tasks.index(all_tasks)
             blocking_count = 0
             for task in all_tasks:
                 task_deps = task.get('dependencies', [])
@@ -80,61 +74,57 @@ class TaskScorer:
                     blocking_count += 1
             
             if blocking_count > 0:
-                return 1.0  # High priority if blocking other tasks
+                return 1.0
             else:
-                return 0.3  # Lower priority if has dependencies but not blocking others
+                return 0.3
         except (ValueError, IndexError):
             return 0.5
     
     def detect_circular_dependencies(self, tasks):
-        """Detect circular dependencies in tasks"""
-        circular_deps = []
-        visited = set()
-        
-        def dfs(task_id, path):
-            if task_id in path:
-                circular_start = path.index(task_id)
-                circular_deps.append(path[circular_start:])
-                return
-            
-            if task_id in visited:
-                return
-            
-            visited.add(task_id)
-            path.append(task_id)
-            
-            # Find task by ID (assuming IDs start from 1)
-            task = None
-            for t in tasks:
-                if t.get('id') == task_id or (tasks.index(t) + 1) == task_id:
-                    task = t
-                    break
-            
-            if task:
-                deps = task.get('dependencies', [])
-                if isinstance(deps, list):
-                    for dep_id in deps:
-                        dfs(dep_id, path.copy())
-        
-        for i in range(len(tasks)):
+        graph = {}
+        for i, task in enumerate(tasks):
             task_id = i + 1
-            if task_id not in visited:
-                dfs(task_id, [])
+            dependencies = task.get('dependencies', [])
+            graph[task_id] = dependencies
+        
+        visited = set()
+        rec_stack = set()
+        circular_deps = []
+        
+        def dfs(node, path):
+            if node in rec_stack:
+                cycle_start = path.index(node)
+                circular_deps.append(path[cycle_start:])
+                return
+            
+            if node in visited:
+                return
+            
+            visited.add(node)
+            rec_stack.add(node)
+            path.append(node)
+            
+            for neighbor in graph.get(node, []):
+                dfs(neighbor, path.copy())
+            
+            rec_stack.remove(node)
+            path.pop()
+        
+        for node in graph:
+            if node not in visited:
+                dfs(node, [])
         
         return circular_deps
     
     def calculate_priority_score(self, task, all_tasks=None):
-        """Calculate overall priority score for a task"""
         if all_tasks is None:
             all_tasks = [task]
         
-        # Calculate individual component scores with error handling
         urgency_score = self.calculate_urgency_score(task.get('due_date', ''))
         importance_score = self.calculate_importance_score(task.get('importance', 5))
         effort_score = self.calculate_effort_score(task.get('estimated_hours', 1))
         dependency_score = self.calculate_dependency_score(task.get('dependencies', []), all_tasks)
         
-        # Calculate weighted overall score
         overall_score = (
             urgency_score * self.weights['urgency'] +
             importance_score * self.weights['importance'] +
@@ -142,10 +132,8 @@ class TaskScorer:
             dependency_score * self.weights['dependencies']
         )
         
-        # Ensure score is between 0 and 1
         overall_score = max(0, min(1, overall_score))
         
-        # Generate explanation
         explanation_parts = []
         if urgency_score > 0.7:
             explanation_parts.append('high urgency')

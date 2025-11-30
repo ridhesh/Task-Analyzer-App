@@ -1,9 +1,7 @@
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from datetime import date
 from .scoring import TaskScorer
-import json
 
 @api_view(['POST'])
 def analyze_tasks(request):
@@ -11,15 +9,24 @@ def analyze_tasks(request):
     Analyze and sort tasks by priority score
     """
     try:
-        tasks_data = request.data
+        print("🔍 Analyze endpoint called")  # Debug log
         
-        if not isinstance(tasks_data, list):
+        # Handle both array and object formats
+        if isinstance(request.data, list):
+            tasks_data = request.data
+            strategy = 'smart_balance'
+        elif isinstance(request.data, dict):
+            tasks_data = request.data.get('tasks', [])
+            strategy = request.data.get('strategy', 'smart_balance')
+        else:
             return Response(
-                {"error": "Expected a list of tasks"}, 
+                {"error": "Expected a list of tasks or object with tasks array"}, 
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        if len(tasks_data) == 0:
+        print(f"📊 Processing {len(tasks_data)} tasks with strategy: {strategy}")  # Debug log
+        
+        if not tasks_data:
             return Response(
                 {"error": "No tasks provided for analysis"},
                 status=status.HTTP_400_BAD_REQUEST
@@ -32,19 +39,8 @@ def analyze_tasks(request):
                     {"error": f"Task {i+1} is missing required fields (title, due_date, estimated_hours, importance)"},
                     status=status.HTTP_400_BAD_REQUEST
                 )
-            
-            # Validate data types
-            try:
-                float(task_data['estimated_hours'])
-                int(task_data['importance'])
-            except (ValueError, TypeError):
-                return Response(
-                    {"error": f"Task {i+1} has invalid data types for estimated_hours or importance"},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
         
-        # Get sorting strategy
-        strategy = request.data.get('strategy', 'smart_balance')
+        # Initialize scorer
         scorer = TaskScorer(strategy)
         
         # Check for circular dependencies
@@ -65,48 +61,59 @@ def analyze_tasks(request):
         # Sort by priority score (descending)
         sorted_tasks = sorted(scored_tasks, key=lambda x: x['priority_score'], reverse=True)
         
+        print(f"✅ Successfully analyzed {len(sorted_tasks)} tasks")  # Debug log
+        
         return Response({
             'strategy_used': strategy,
             'tasks': sorted_tasks,
             'total_tasks': len(sorted_tasks),
-            'message': f'Successfully analyzed {len(sorted_tasks)} tasks using {strategy.replace("_", " ").title()} strategy'
+            'message': f'Successfully analyzed {len(sorted_tasks)} tasks using {strategy} strategy'
         })
     
     except Exception as e:
+        print(f"❌ Error in analyze_tasks: {str(e)}")  # Debug log
+        import traceback
+        print(traceback.format_exc())  # Print full traceback
+        
         return Response(
             {"error": f"An error occurred during analysis: {str(e)}"},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
-@api_view(['GET', 'POST'])
+@api_view(['POST'])
 def suggest_tasks(request):
     """
     Get top 3 tasks to work on today
     """
     try:
-        if request.method == 'POST':
-            tasks_data = request.data
-            if not isinstance(tasks_data, list):
-                return Response(
-                    {"error": "Expected a list of tasks"}, 
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-        else:
-            # Return empty suggestions for GET requests without data
-            return Response({
-                'suggested_tasks': [],
-                'explanation': 'No tasks available for suggestions. Please use POST method with task data or use the analyze endpoint first.'
-            })
+        print("💡 Suggest endpoint called")  # Debug log
         
-        if len(tasks_data) == 0:
+        # Handle both array and object formats
+        if isinstance(request.data, list):
+            tasks_data = request.data
+            strategy = 'smart_balance'
+        elif isinstance(request.data, dict):
+            tasks_data = request.data.get('tasks', [])
+            strategy = request.data.get('strategy', 'smart_balance')
+        else:
+            return Response(
+                {"error": "Expected a list of tasks or object with tasks array"}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        print(f"📊 Processing {len(tasks_data)} tasks for suggestions")  # Debug log
+        
+        if not tasks_data:
             return Response({
                 'suggested_tasks': [],
                 'explanation': 'No tasks provided for suggestions'
             })
         
-        scorer = TaskScorer('smart_balance')
+        # Initialize scorer
+        scorer = TaskScorer(strategy)
         scored_tasks = []
         
+        # Calculate scores for all tasks
         for task_data in tasks_data:
             score_result = scorer.calculate_priority_score(task_data, tasks_data)
             scored_task = {**task_data, **score_result}
@@ -118,16 +125,20 @@ def suggest_tasks(request):
         # Generate detailed explanations for each suggestion
         for i, task in enumerate(top_tasks):
             reasons = []
-            if task.get('component_scores', {}).get('urgency', 0) > 0.7:
+            component_scores = task.get('component_scores', {})
+            
+            if component_scores.get('urgency', 0) > 0.7:
                 reasons.append('urgent deadline')
-            if task.get('component_scores', {}).get('importance', 0) > 0.7:
+            if component_scores.get('importance', 0) > 0.7:
                 reasons.append('high importance')
-            if task.get('component_scores', {}).get('effort', 0) > 0.7:
+            if component_scores.get('effort', 0) > 0.7:
                 reasons.append('quick win')
-            if task.get('component_scores', {}).get('dependency', 0) > 0.7:
+            if component_scores.get('dependency', 0) > 0.7:
                 reasons.append('blocks other tasks')
             
             task['suggestion_reason'] = f"Priority #{i+1}: " + ", ".join(reasons) if reasons else f"Priority #{i+1}: balanced priority score"
+        
+        print(f"✅ Generated {len(top_tasks)} suggestions")  # Debug log
         
         return Response({
             'suggested_tasks': top_tasks,
@@ -136,6 +147,10 @@ def suggest_tasks(request):
         })
     
     except Exception as e:
+        print(f"❌ Error in suggest_tasks: {str(e)}")  # Debug log
+        import traceback
+        print(traceback.format_exc())  # Print full traceback
+        
         return Response(
             {"error": f"An error occurred while generating suggestions: {str(e)}"},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
